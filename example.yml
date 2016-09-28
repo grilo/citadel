@@ -1,0 +1,27 @@
+platform:
+  name: java
+  version: "1.8"
+
+env:
+  - Hello=WORLD
+
+build:
+  - echo "Before building..."
+  - echo "hello world"
+  - echo "Done!"
+
+deploy:
+  maven:
+    id: something.zip
+    group: es.bank.ing
+    packaging: zip
+  npm:
+    name: something
+    version: 1.8
+
+test:
+  - echo "Should be testing something..."
+    
+notification:
+  mail:
+    - joao.grilo@gmail.com
