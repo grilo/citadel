@@ -3,7 +3,7 @@
 import nodes.root
 
 
-class Deploy(nodes.root.Node):
+class Publish(nodes.root.Node):
 
     def __init__(self, yml):
         super(Deploy, self).__init__(yml)

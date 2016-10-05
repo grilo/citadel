@@ -7,8 +7,7 @@ import logging
 import argparse
 import sys
 
-import extlibs.yaml as yaml
-import nodes.ops
+import nodes.citadel
 
 import settings
 
@@ -20,7 +19,7 @@ def main():
 
     parser.add_argument("-v", "--verbose", action="store_true", \
         help="Increase output verbosity")
-    parser.add_argument("-f", "--file", default="x.yml", \
+    parser.add_argument("-f", "--file", default="example.yml", \
         help="A YAML file used to generate the build script.")
     parser.add_argument("-n", "--validate-only", action="store_true", \
         help="Validate only, exit with error code 1 if any errors are found.")
@@ -33,10 +32,8 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
 
     with open(args.file) as y:
-        data = yaml.load(y)
-        builder = nodes.ops.BashGenerator(data)
+        builder = nodes.citadel.Yaml(y)
         builder.generate()
-        print(builder.to_bash())
 
         if builder.get_errors() > 0:
             logging.critical("Found (%d) errors while parsing: %s" % (errors, args.file))

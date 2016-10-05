@@ -4,15 +4,16 @@ import os
 import sys
 import inspect
 import logging
+import extlibs.yaml
 
 
-class BashGenerator:
+class Yaml:
 
-    def __init__(self, yml):
+    def __init__(self, yml_file):
+        self.yml = extlibs.yaml.load(yml_file)
         self.plugins_dir = 'nodes'
-        self.order = ['platform', 'env', 'build', 'publish', 'deploy', 'test', 'notification']
+        self.order = ['header', 'platform', 'env', 'build', 'publish', 'deploy', 'test', 'notification']
         self.generators = []
-        self.yml = yml
 
     def scan_plugins(self):
         plugins = {}
@@ -26,7 +27,7 @@ class BashGenerator:
             if os.path.isfile(node_plugin):
                 try:
                     plugins[true_name] = self.__load_plugin(true_name, node_plugin)
-                except AttributeError, e:
+                except AttributeError as e:
                     logging.debug("Unable to import file (%s)." % (node_plugin))
                     print(e)
         if len(plugins) <= 0:
@@ -50,9 +51,12 @@ class BashGenerator:
         self.generators = []
 
         for item in self.order:
-            if item in self.yml.keys():
-                logging.debug("Found (%s) in the parsed file." % (item))
-            else: continue
+            if item != 'header':
+                if item in self.yml.keys():
+                    logging.debug("Found (%s) in the parsed file." % (item))
+                else:
+                    logging.debug("Unplugged plugin found, ignoring... (%s)." % (item))
+                    continue
 
             class_instance = self.__load_plugin(item, os.path.join('nodes', item + '.py'))
             self.generators.append(class_instance(self.yml))
@@ -61,7 +65,7 @@ class BashGenerator:
         return 0
 
     def to_bash(self):
-        string = []
+        output = []
         for gen in self.generators:
-            string.append(gen.to_bash())
-        return "\n".join(string)
+            output.append("\n".join(gen.to_bash()) + "\n# end " + gen.__class__.__name__.lower())
+        return "\n\n".join(output)
