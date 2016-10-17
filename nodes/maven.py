@@ -3,7 +3,7 @@
 import nodes.root
 
 
-class Deploy(nodes.root.Node):
+class Maven(nodes.root.Node):
 
     def __init__(self, yml, path):
-        super(Deploy, self).__init__(yml, path)
+        super(Maven, self).__init__(yml, path)

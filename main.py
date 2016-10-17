@@ -6,8 +6,8 @@
 import logging
 import argparse
 import sys
-
-import nodes.citadel
+import extlibs.yaml
+import nodes.root
 
 import settings
 
@@ -31,9 +31,8 @@ def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    with open(args.file) as y:
-        builder = nodes.citadel.Yaml(y)
-        builder.generate()
+    with open(args.file) as yml_file:
+        builder = nodes.root.Node(extlibs.yaml.load(yml_file))
 
         if builder.get_errors() > 0:
             logging.critical("Found (%d) errors while parsing: %s" % (errors, args.file))
@@ -42,7 +41,7 @@ def main():
             logging.info("Validation mode only, exiting...")
             sys.exit(0)
 
-        print(builder.to_bash())
+        print("\n".join(builder.to_bash()))
 
 
 if __name__ == '__main__':

@@ -1,6 +1,5 @@
-platform:
-    os: linux
-    language: java8
+platform: rhel6
+language: java8
 
 env:
   - Hello=WORLD
@@ -11,25 +10,25 @@ build:
     - echo "Before building..."
     - echo "hello world"
     - echo "Done!"
-  - mvn: clean install -DskipTests=true
-  - xcode:
+  mvn: clean install -DskipTests=true
+  xcode:
     project: some_project
     scheme: some_scheme
 
 publish:
-  - maven:
-      id: something
-      group: es.bank.ing
-      packaging: zip
-  - npm:
-      - package1.tgz
-      - package2
+  maven:
+    id: something
+    group: es.bank.ing
+    packaging: zip
+  npm:
+    - package1.tgz
+    - package2
 
 deploy:
-    - script:
-        - scp something user@remote_host:/deploy_dir/something
-        - ssh user@remote_host "run_deploy.sh /deploy_dir/something"
-    - ansible:
+    script:
+      - scp something user@remote_host:/deploy_dir/something
+      - ssh user@remote_host "run_deploy.sh /deploy_dir/something"
+    ansible:
         deploy_FRONT.yml
 
 test:
