@@ -6,10 +6,23 @@
 import logging
 import argparse
 import sys
+import collections
 import extlibs.yaml
 import nodes.root
 
 import settings
+
+
+def ordered_load(stream, Loader=extlibs.yaml.Loader, object_pairs_hook=collections.OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        extlibs.yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+    return extlibs.yaml.load(stream, OrderedLoader)
 
 
 def main():
@@ -32,7 +45,7 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
 
     with open(args.file) as yml_file:
-        builder = nodes.root.Node(extlibs.yaml.load(yml_file))
+        builder = nodes.root.Node(ordered_load(yml_file, extlibs.yaml.SafeLoader))
 
         if builder.get_errors() > 0:
             logging.critical("Found (%d) errors while parsing: %s" % (errors, args.file))
