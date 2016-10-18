@@ -23,6 +23,12 @@ class Node(object):
         sys.path.append(directory)
         try:
             module = __import__(name, globals(), locals(), [], -1)
+        except SyntaxError as e:
+            raise e
+        except ImportError as e:
+            pass
+        try:
+            module = __import__(name, globals(), locals(), [], -1)
             class_instance = getattr(module, name.capitalize())
             del sys.path[-1]
             return class_instance
