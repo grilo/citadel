@@ -16,8 +16,7 @@ class Node(object):
         self.errors = []
         self.output = []
         self.children = []
-        if isinstance(yml, dict):
-            self._parse_children(yml)
+        self._parse_children(yml)
         if not path and self.__class__.__name__ == 'Node':
             self.output.append('#!/usr/bin/env bash')
             self.output.append('\n### Automagically generated ###\n')
@@ -42,6 +41,11 @@ class Node(object):
             raise NotImplementedError("Unable to find requested module in path: %s" % (path))
 
     def _parse_children(self, yml):
+        if isinstance(yml, list):
+            for i in yml:
+                self._parse_children(i)
+        if not isinstance(yml, dict):
+            return
         for k in yml.keys():
             try:
                 class_instance = self.__load_plugin(k, os.path.join('nodes', k + '.py'))

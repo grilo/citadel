@@ -38,7 +38,9 @@ def main():
         help="A YAML file used to generate the build script.")
     parser.add_argument("-n", "--validate-only", action="store_true", \
         help="Validate only, exit with error code 1 if any errors are found.")
-    parser.add_argument("-e", "--execute", action="store_true", \
+    parser.add_argument("-e", "--environment", default="dev", \
+        help="Set the execution environment.")
+    parser.add_argument("-x", "--execute", action="store_true", \
         help="Execute the bash file after generating it.")
 
     args = parser.parse_args()

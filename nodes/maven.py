@@ -11,6 +11,10 @@ class Maven(nodes.root.Node):
     def __init__(self, yml, path):
         super(Maven, self).__init__(yml, path)
 
+        if not isinstance(yml, dict):
+            self.add_error('Parsing error, probably malformed yaml.')
+            return
+
         # Unsure if this is python3 compatible
         # Always display maven's version
         mvn_exec = distutils.spawn.find_executable('mvn') + ' -V'

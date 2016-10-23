@@ -16,12 +16,17 @@ build:
     scheme: some_scheme
 
 publish:
-  maven:
-    file: target/java.jar
-    id: something
-    group: es.bank.ing
-    packaging: zip
-  npm:
+  - maven:
+      file: target/java.jar
+      id: something
+      group: es.bank.ing
+      packaging: zip
+  - maven:
+      file: target/java.jar
+      id: something
+      group: es.bank.ing
+      packaging: zip
+  - npm:
     - package1.tgz
     - package2
 
