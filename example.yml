@@ -37,3 +37,5 @@ test:
 notification:
   mail:
     - joao.grilo@gmail.com
+  webhook:
+    - https://jenkins/job/somename
