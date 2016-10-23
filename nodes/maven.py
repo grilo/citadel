@@ -17,7 +17,7 @@ class Maven(nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        mvn_exec = distutils.spawn.find_executable('mvn') + ' -V'
+        mvn_exec = self.get_executable('mvn') + ' -V'
 
         if path[-2] == 'build':
             self.output.append(mvn_exec + ' ' + yml)

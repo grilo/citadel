@@ -4,14 +4,18 @@ import os
 import sys
 import inspect
 import logging
+import subprocess
+import shlex
+import distutils.spawn
 import extlibs.yaml
 
 
 class Node(object):
 
-    def __init__(self, yml, path=[]):
+    def __init__(self, yml, path=[], environment=None):
         self.yml = yml
         self.path = path
+        self.environment = environment
         logging.debug('Loading (%s): %s' % (self.__class__.__name__, "/".join(path)))
         self.errors = []
         self.output = []
@@ -22,6 +26,8 @@ class Node(object):
             self.output.append('\n### Automagically generated ###\n')
             self.output.append('set -eu')
             self.output.append('set -o pipefail\n')
+            if self.environment:
+                self.output.append('export ENVIRONMENT=%s\n' % (self.environment))
 
     def __load_plugin(self, name, path):
         directory = os.path.dirname(path)
@@ -52,6 +58,15 @@ class Node(object):
                 self.children.append(class_instance(yml[k], self.path + [k]))
             except NotImplementedError:
                 pass
+
+    def get_executable(self, executable):
+        return distutils.spawn.find_executable(executable)
+
+    def get_alternatives(self, binary):
+        return self.run_cmd('update-alternatives --list %s' % (binary)).splitlines()
+
+    def run_cmd(self, cmd):
+        return subprocess.check_output(shlex.split(cmd))
 
     def add_error(self, msg):
         self.errors.append('%s: %s' % ("/".join(self.path), msg))

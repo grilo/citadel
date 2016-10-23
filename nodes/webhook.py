@@ -12,6 +12,6 @@ class Webhook(nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        curl_exec = distutils.spawn.find_executable('curl')
+        curl_exec = self.get_executable('curl')
         for url in yml:
             self.output.append(curl_exec + ' ' + url)
