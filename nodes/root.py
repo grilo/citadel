@@ -60,6 +60,7 @@ class Node(object):
                 pass
 
     def get_executable(self, executable):
+        # Not sure if this is python3 compatible
         return distutils.spawn.find_executable(executable)
 
     def get_alternatives(self, binary):

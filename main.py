@@ -38,7 +38,7 @@ def main():
         help="A YAML file used to generate the build script.")
     parser.add_argument("-n", "--validate-only", action="store_true", \
         help="Validate only, exit with error code 1 if any errors are found.")
-    parser.add_argument("-e", "--environment", default=None, \
+    parser.add_argument("-e", "--environment", default='', \
         help="Set the execution environment.")
     parser.add_argument("-x", "--execute", action="store_true", \
         help="Execute the bash file after generating it.")
@@ -52,7 +52,7 @@ def main():
 
     with open(args.file) as yml_file:
         ordered_yml = ordered_load(yml_file, extlibs.yaml.SafeLoader)
-        builder = nodes.root.Node(ordered_yml, [], args.environment.lower())
+        builder = nodes.root.Node(ordered_yml, [], args.environment)
         errors = builder.get_errors()
 
         if len(errors) > 0:
