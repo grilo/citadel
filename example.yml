@@ -17,6 +17,7 @@ build:
 
 publish:
   maven:
+    file: target/java.jar
     id: something
     group: es.bank.ing
     packaging: zip
@@ -28,8 +29,7 @@ deploy:
     script:
       - scp something user@remote_host:/deploy_dir/something
       - ssh user@remote_host "run_deploy.sh /deploy_dir/something"
-    ansible:
-        deploy_FRONT.yml
+    ansible: deploy_FRONT.yml
 
 test:
   - echo "Should be testing something..."
