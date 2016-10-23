@@ -17,6 +17,7 @@ build:
   xcode:
     project: some_project
     scheme: some_scheme
+  npm: start
 
 publish:
   - maven:
@@ -40,7 +41,8 @@ deploy:
     ansible: deploy_FRONT.yml
 
 test:
-  - echo "Should be testing something..."
+  script:
+    - echo "Should be testing something..."
     
 notification:
   mail:
