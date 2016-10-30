@@ -10,7 +10,18 @@ build:
     - echo "Before building..."
     - echo "hello world"
     - echo "Done!"
-  mvn: clean install -DskipTests=true
+
+  maven:
+    pom: some/project/pom.xml
+    lifecycle: clean install
+    skipTests: true
+    skipMoveHistoric: false
+    checkstyle.skip: true
+    client.version=: ${VERSION}
+    app.version: ${APP_VERSION}
+    maven.repo.local: $PWD/.repository
+    opts: -P ${MVN_PROFILE} -s ${MVN_SETTINGS} -T 4 -B -U
+
   xcode:
     project: some_project
     scheme: some_scheme
