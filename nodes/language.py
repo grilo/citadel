@@ -12,11 +12,13 @@ class Language(nodes.root.Node):
 
     def parse_lang(self, lang):
         if 'java' in lang:
+            javac = None
+            version = re.search('[0-9\.]+', lang).group(0)
             for alt in self.get_alternatives('javac'):
-                if 'javac' in alt and 'java-8' in alt:
+                if 'javac' in alt and 'java-' + version in alt:
                     javac = alt
             if not javac:
-                raise Exception('Unsupported language (%s).' % (yml))
+                raise Exception('Unsupported language (%s).' % (lang))
 
             java_home = javac.split("/bin/javac")[0]
             self.output.append('export JAVA_HOME=%s' % (java_home))
