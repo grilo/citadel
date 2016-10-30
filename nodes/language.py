@@ -21,7 +21,7 @@ class Language(nodes.root.Node):
                 raise Exception('Unsupported language (%s).' % (lang))
 
             java_home = javac.split("/bin/javac")[0]
-            self.output.append('export JAVA_HOME=%s' % (java_home))
+            self.output.append('export JAVA_HOME="%s"' % (java_home))
         elif 'npm' in lang:
             wanted_version = re.match('npm([0-9\.]+)', lang).group(1)
             npm = self.get_executable('npm')
