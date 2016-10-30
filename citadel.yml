@@ -28,8 +28,11 @@ publish:
       group: es.bank.ing
       packaging: zip
   - npm:
-    - package1.tgz
-    - package2
+      registry: https://registry.npmjs.org
+      scope: '@somescope'
+      files:
+        - '*.py'
+        - 'hello.py'
 
 deploy:
     script:

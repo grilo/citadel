@@ -34,7 +34,7 @@ def main():
 
     parser.add_argument("-v", "--verbose", action="store_true", \
         help="Increase output verbosity")
-    parser.add_argument("-f", "--file", default="example.yml", \
+    parser.add_argument("-f", "--file", default="citadel.yml", \
         help="A YAML file used to generate the build script.")
     parser.add_argument("-n", "--validate-only", action="store_true", \
         help="Validate only, exit with error code 1 if any errors are found.")
