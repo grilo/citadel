@@ -28,6 +28,7 @@ class Node(object):
             self.output.append('set -o pipefail\n')
             if self.environment:
                 self.output.append('export ENVIRONMENT=%s\n' % (self.environment))
+            self.output.append('export PWD="%s"' % (os.getcwd()))
 
     def __load_plugin(self, name, path):
         directory = os.path.dirname(path)
