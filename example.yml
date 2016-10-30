@@ -1,8 +1,5 @@
 platform: ubuntu
-language:
-  - java8
-  - npm3.5
-
+language: java8
 
 env:
   - Hello=WORLD

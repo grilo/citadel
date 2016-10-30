@@ -8,11 +8,7 @@ class Language(nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Language, self).__init__(yml, path)
-        if isinstance(yml, list):
-            for l in yml:
-                self.parse_lang(l)
-        else:
-            self.parse_lang(yml)
+        self.parse_lang(yml)
 
     def parse_lang(self, lang):
         if 'java' in lang:
