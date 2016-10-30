@@ -7,10 +7,11 @@ import logging
 import argparse
 import sys
 import collections
-import extlibs.yaml
-import nodes.root
+import os
 import subprocess
 import shlex
+import extlibs.yaml
+import nodes.root
 
 import settings
 
@@ -49,6 +50,9 @@ def main():
     logging.getLogger().setLevel(getattr(logging, settings.log_level.upper()))
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    if os.path.isdir(args.file):
+        args.file = os.path.join(args.file, 'citadel.yml')
 
     with open(args.file) as yml_file:
         ordered_yml = ordered_load(yml_file, extlibs.yaml.SafeLoader)
