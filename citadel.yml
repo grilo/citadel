@@ -28,11 +28,13 @@ build:
   npm: start
 
 publish:
-  - maven:
-      file: target/java.jar
-      id: something
-      group: es.bank.ing
-      packaging: zip
+  - branch:
+      name: ING_PRE_DG
+      maven:
+        file: target/dev-java.jar
+        id: something
+        group: es.bank.ing
+        packaging: zip
   - maven:
       file: target/java.jar
       id: something
