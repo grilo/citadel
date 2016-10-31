@@ -53,8 +53,13 @@ def main():
 
     if os.path.isdir(args.file):
         args.file = os.path.join(args.file, 'citadel.yml')
+    else:
+        args.file = os.path.join('.', args.file)
 
     with open(args.file) as yml_file:
+        old_cwd = os.getcwd()
+        os.chdir(os.path.dirname(args.file))
+
         ordered_yml = ordered_load(yml_file, extlibs.yaml.SafeLoader)
         builder = nodes.root.Node(ordered_yml, [], args.environment)
         errors = builder.get_errors()
@@ -86,6 +91,7 @@ def main():
                     sys.stdout.write(line)
                     sys.stdout.flush()
                 sys.exit(proc.returncode)
+        os.chdir(old_cwd)
 
 if __name__ == '__main__':
     main()
