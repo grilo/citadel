@@ -13,10 +13,10 @@ class Npm(nodes.root.Node):
         npm_exec = self.get_executable('npm')
         self.output.append('npm --version')
 
-        if path[-2] == 'build':
+        if 'build' in path:
             self.output.append(npm_exec + ' ' + yml)
 
-        elif path[-2] == 'publish':
+        elif 'publish' in path:
             registry = 'https://registry.npmjs.org'
             scope = None
             if 'registry' in yml.keys():

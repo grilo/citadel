@@ -19,7 +19,7 @@ class Maven(nodes.root.Node):
         # Always display maven's version
         mvn_exec = self.get_executable('mvn') + ' -V'
 
-        if path[-2] == 'build':
+        if 'build' in path:
             pom = 'pom.xml'
             lifecycle = 'clean install'
             opts = ''
@@ -43,7 +43,7 @@ class Maven(nodes.root.Node):
                 cmd.append('-D%s=%s' % (k, v))
             self.output.append(self.format_cmd(cmd))
 
-        elif path[-2] == 'publish':
+        elif 'publish' in path:
             if not 'file' in yml.keys():
                 self.add_error('Publishing with maven requires "file" to be specified.')
             cmd = ['%s deploy:deploy-file' % (mvn_exec)]

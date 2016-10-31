@@ -25,6 +25,7 @@ class Language(nodes.root.Node):
         elif 'npm' in lang:
             wanted_version = re.match('npm([0-9\.]+)', lang).group(1)
             npm = self.get_executable('npm')
-            existing_version = self.run_cmd(npm + ' --version').strip()
+            out, rc = self.run_cmd(npm + ' --version')
+            existing_version = out.strip()
             if not re.match(wanted_version, existing_version):
                 self.add_error('Couldn\'t find the required npm version (%s).' % (wanted_version))
