@@ -75,10 +75,10 @@ def main():
 
         output = "\n".join(builder.to_bash())
 
-        logging.info('Generated script:\n%s' % (output))
+        logging.debug('Generated script:\n%s' % (output))
 
         if args.execute:
-            with open(args.file + '.sh', 'w') as sh_file:
+            with open(os.path.basename(args.file) + '.sh', 'w') as sh_file:
                 sh_file.write(output)
                 sh_file.close()
                 cmd = 'bash ' + sh_file.name
