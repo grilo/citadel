@@ -56,9 +56,3 @@ deploy:
 test:
   script:
     - echo "Should be testing something..."
-    
-notification:
-  mail:
-    - joao.grilo@gmail.com
-  webhook:
-    - https://jenkins/job/somename
