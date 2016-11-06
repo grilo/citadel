@@ -10,6 +10,7 @@ import collections
 import os
 import subprocess
 import shlex
+import re
 import extlibs.yaml
 import nodes.root
 
@@ -26,6 +27,19 @@ def ordered_load(stream, Loader=extlibs.yaml.Loader, object_pairs_hook=collectio
         extlibs.yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
         construct_mapping)
     return extlibs.yaml.load(stream, OrderedLoader)
+
+def filter_secrets(lines):
+    filtered = []
+    for line in lines:
+        if re.search('.*password.*', line, flags=re.IGNORECASE):
+            subbed = re.sub(r'(password[\s:=]+)([\'"]*\w[\'"]*).*', r'\1(*** hidden ***) ', line)
+            filtered.append(subbed)
+        elif re.search('.*secret.*', line, flags=re.IGNORECASE):
+            subbed = re.sub(r'(secret[\s:=]+)([\'"]*\w[\'"]*)*.*', r'\1(*** hidden ***) ', line)
+            filtered.append(subbed)
+        else:
+            filtered.append(line)
+    return filtered
 
 
 def main():
@@ -73,8 +87,7 @@ def main():
             logging.info("Validation mode only, exiting...")
             sys.exit(0)
 
-        output = "\n".join(builder.to_bash())
-
+        output = "\n".join(filter_secrets(builder.to_bash()))
         logging.debug('Generated script:\n%s' % (output))
 
         if args.execute:

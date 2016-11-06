@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import nodes.root
+import tools
 
 
 class Ansible(nodes.root.Node):
@@ -15,7 +16,7 @@ class Ansible(nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        ansible_exec = self.get_executable('ansible-playbook')
+        ansible_exec = tools.get_executable('ansible-playbook')
 
         if 'deploy' in path:
             if not 'inventory' in yml.keys():

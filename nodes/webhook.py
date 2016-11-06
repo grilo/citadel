@@ -3,6 +3,7 @@
 import distutils.spawn
 
 import nodes.root
+import tools
 
 
 class Webhook(nodes.root.Node):
@@ -12,6 +13,6 @@ class Webhook(nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        curl_exec = self.get_executable('curl')
+        curl_exec = tools.get_executable('curl')
         for url in yml:
             self.output.append(curl_exec + ' ' + url)

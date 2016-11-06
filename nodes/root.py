@@ -4,8 +4,6 @@ import os
 import sys
 import inspect
 import logging
-import subprocess
-import shlex
 import distutils.spawn
 import extlibs.yaml
 
@@ -61,19 +59,6 @@ class Node(object):
                 self.children.append(class_instance(yml[k], self.path + [k]))
             except NotImplementedError:
                 pass
-
-    def get_executable(self, executable):
-        # Not sure if this is python3 compatible
-        return distutils.spawn.find_executable(executable)
-
-    def get_alternatives(self, binary):
-        rc, out = self.run_cmd('update-alternatives --list %s' % (binary))
-        return out.splitlines()
-
-    def run_cmd(self, cmd):
-        p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-        stdout, stderr = p.communicate()
-        return p.returncode, stdout
 
     def add_error(self, msg):
         self.errors.append('%s: %s' % ("/".join(self.path), msg))

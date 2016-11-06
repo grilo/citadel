@@ -4,6 +4,7 @@ import logging
 import os
 
 import nodes.root
+import tools
 
 
 class Branch(nodes.root.Node):
@@ -25,18 +26,18 @@ class Branch(nodes.root.Node):
         branch_name = None
 
         # Git
-        rc, out = self.run_cmd('git rev-parse --abbrev-ref HEAD')
+        rc, out = tools.run_cmd('git rev-parse --abbrev-ref HEAD')
         if rc == 0:
             branch_name = out.strip()
             logging.debug('Git repo detected. Branch: %s' % (branch_name))
 
         # AccuRev
-        rc, out = self.run_cmd('accurev info')
+        rc, out = tools.run_cmd('accurev info')
         if rc == 0:
             for line in out.splitlines():
                 if line.strip().startswith('Workspace/Ref'):
                     ws = line.split(": ")[-1]
-                    rc, basis = self.run_cmd('accurev show -s %s streams' % (ws))
+                    rc, basis = tools.run_cmd('accurev show -s %s streams' % (ws))
                     branch_name = basis.splitlines()[-1].split()[1].strip()
                     logging.debug('AccuRev repo detected: %s' % (branch_name))
                     break

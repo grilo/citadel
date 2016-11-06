@@ -1,5 +1,6 @@
 platform: ubuntu
-language: java8
+#language: java8
+language: xcode7
 
 env:
   - Hello=WORLD
