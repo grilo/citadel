@@ -32,6 +32,6 @@ class Language(nodes.root.Node):
             if not re.match(wanted_version, existing_version):
                 self.add_error('Couldn\'t find the required npm version (%s).' % (wanted_version))
         elif 'xcode' in lang:
-            wanted_version = re.match('xcode([0-9\.]+)', lang).group(1)
+            wanted_version = re.match('xcode([0-9\.\-]+)', lang).group(1)
             npm = tools.get_executable('xcodebuild')
             self.output.append('sudo xcode-select -s /Applications/Xcode%s.app' % (wanted_version))
