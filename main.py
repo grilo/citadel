@@ -32,10 +32,10 @@ def filter_secrets(lines):
     filtered = []
     for line in lines:
         if re.search('.*password.*', line, flags=re.IGNORECASE):
-            subbed = re.sub(r'(password[\s:=]+)([\'"]*\w[\'"]*).*', r'\1(*** hidden ***) ', line)
+            subbed = re.sub(r'(password[\s:=]+)([\'"]*.*[\'"]*)[\s$].*', r'\1(*** hidden ***) ', line)
             filtered.append(subbed)
         elif re.search('.*secret.*', line, flags=re.IGNORECASE):
-            subbed = re.sub(r'(secret[\s:=]+)([\'"]*\w[\'"]*)*.*', r'\1(*** hidden ***) ', line)
+            subbed = re.sub(r'(secret[\s:=]+)([\'"]*.*[\'"]*)[\s$]', r'\1(*** hidden ***) ', line)
             filtered.append(subbed)
         else:
             filtered.append(line)
