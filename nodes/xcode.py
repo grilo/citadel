@@ -32,6 +32,7 @@ class Xcode(nodes.root.Node):
             lifecycle = 'clean archive'
             scheme = None
             archive_path = None
+            export_path = None
 
             if not 'scheme' in yml.keys():
                 self.add_error('A scheme is necessary to know what to build.')
@@ -88,6 +89,9 @@ class Xcode(nodes.root.Node):
             else:
                 yml['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), yml['CONFIGURATION_BUILD_DIR'])
 
+            if not 'exportPath' in yml.keys():
+                export_path = os.path.join(yml['CONFIGURATION_BUILD_DIR'], scheme + '.ipa')))
+
             for k, v in yml.items():
                 cmd.append('%s="%s"' % (k, v))
             self.output.append('echo "Building..."')
@@ -99,5 +103,5 @@ class Xcode(nodes.root.Node):
             export_cmd.append('-exportFormat ipa')
             export_cmd.append('-exportProvisioningProfile "%s"' % (yml['PROVISIONING_PROFILE']))
             export_cmd.append('-archivePath "%s"' % (archive_path))
-            export_cmd.append('-exportPath "%s"' % (os.path.join(yml['CONFIGURATION_BUILD_DIR'], scheme + '.ipa')))
+            export_cmd.append('-exportPath "%s"' % (export_path))
             self.output.append(self.format_cmd(export_cmd))
