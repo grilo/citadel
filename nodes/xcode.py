@@ -90,7 +90,7 @@ class Xcode(nodes.root.Node):
                 yml['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), yml['CONFIGURATION_BUILD_DIR'])
 
             if not 'exportPath' in yml.keys():
-                export_path = os.path.join(yml['CONFIGURATION_BUILD_DIR'], scheme + '.ipa')))
+                export_path = os.path.join(yml['CONFIGURATION_BUILD_DIR'], scheme + '.ipa')
 
             for k, v in yml.items():
                 cmd.append('%s="%s"' % (k, v))
