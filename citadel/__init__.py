@@ -28,7 +28,8 @@ def load(yml_file, environment):
             os.chdir(old_cwd)
             return False
 
-        output = "\n".join(citadel.tools.filter_secrets(builder.to_bash()))
+        output = builder.to_bash()
+        logging.debug('Generated script:\n%s' % ('\n'.join(citadel.tools.filter_secrets(output))))
 
         os.chdir(old_cwd)
-        return output
+        return '\n'.join(output)
