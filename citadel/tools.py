@@ -74,7 +74,7 @@ def unlock_keychain(keychain, password):
         'echo "Unlocking keychain for code signing."',
         '/usr/bin/security list-keychains -s "%s"' % (keychain),
         '/usr/bin/security default-keychain -d user -s "%s"' % (keychain),
-        '/usr/bin/security unlock keychain -p "%s" "%s"' % (password, keychain),
+        '/usr/bin/security unlock-keychain -p "%s" "%s"' % (password, keychain),
         '/usr/bin/security set-keychain-settings -t 7200 "%s"' % (keychain),
     ])
 
