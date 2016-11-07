@@ -20,7 +20,8 @@ class Language(nodes.root.Node):
                 if 'javac' in alt and 'java-' + version in alt:
                     javac = alt
             if not javac:
-                raise Exception('Unsupported language (%s).' % (lang))
+                self.add_error('Unsupported language (%s).' % (lang))
+                return
 
             java_home = javac.split("/bin/javac")[0]
             self.output.append('export JAVA_HOME="%s"' % (java_home))

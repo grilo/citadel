@@ -11,7 +11,7 @@ class Ansible(nodes.root.Node):
         self.playbook = yml
 
         if not isinstance(yml, dict):
-            self.add_error('Parsing error, probably malformed yaml.')
+            self.add_error('Parsing error, probably malformed yaml (expected dict).')
             return
 
         # Unsure if this is python3 compatible

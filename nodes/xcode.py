@@ -19,8 +19,8 @@ class Xcode(nodes.root.Node):
         # Unsure if this is python3 compatible
         # Always display maven's version
         xcode_exec = tools.get_executable('xcodebuild')
-        #if not xcode_exec:
-        #    self.add_error('Unable to find xcodebuild in the path.')
+        if not xcode_exec:
+            self.add_error('Unable to find xcodebuild in the path.')
 
 
         if 'build' in path:
