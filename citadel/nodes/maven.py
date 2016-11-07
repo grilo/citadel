@@ -2,11 +2,11 @@
 
 import logging
 
-import nodes.root
-import tools
+import citadel.nodes.root
+import citadel.tools
 
 
-class Maven(nodes.root.Node):
+class Maven(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Maven, self).__init__(yml, path)
@@ -17,7 +17,8 @@ class Maven(nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        mvn_exec = tools.get_executable('mvn') + ' -V'
+        mvn_exec = citadel.tools.get_executable('mvn') + ' -V'
+        logging.debug('Found maven executable: %s', mvn_exec)
 
         if 'build' in path:
             pom = 'pom.xml'
@@ -26,13 +27,10 @@ class Maven(nodes.root.Node):
             if 'lifecycle' in yml.keys():
                 lifecycle = yml['lifecycle']
                 del yml['lifecycle']
-            else:
-                self.add_error('Building with maven requires "lifecycle" to be specified.')
+
             if 'pom' in yml.keys():
                 pom = yml['pom']
                 del yml['pom']
-            else:
-                logging.debug('No "build/maven/pom" detected, defaulting to: %s' % (pom))
 
             if 'opts' in yml.keys():
                 opts = yml['opts']
@@ -49,7 +47,7 @@ class Maven(nodes.root.Node):
                 return
             cmd = ['%s deploy:deploy-file' % (mvn_exec)]
             if not 'version' in yml.keys():
-                self.output.append(tools.get_version(yml['file']))
+                self.output.append(citadel.tools.get_version(yml['file']))
                 yml['version'] = '${VERSION}'
             if 'snapshot' in yml.keys():
                 if yml['snapshot']:

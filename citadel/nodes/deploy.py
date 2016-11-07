@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import nodes.root
+import citadel.nodes.root
 
 
-class Deploy(nodes.root.Node):
+class Deploy(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Deploy, self).__init__(yml, path)

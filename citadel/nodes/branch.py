@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 
 import logging
-import os
 import re
 
-import nodes.root
-import tools
+import citadel.nodes.root
+import citadel.tools
 
 
-class Branch(nodes.root.Node):
+class Branch(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         """Conditional execution based on branch name (regex match)."""
         if re.search(yml['name'], self.get_branch_name()):
             super(Branch, self).__init__(yml, path)
         else:
-            # Since we've prevented our recursive stuff to go on, 
+            # Since we've prevented our recursive stuff to go on,
             # we need to do our own init and pretend we're the real
             # deal.
             self.children = []
@@ -27,20 +26,20 @@ class Branch(nodes.root.Node):
         branch_name = None
 
         # Git
-        rc, out = tools.run_cmd('git rev-parse --abbrev-ref HEAD')
+        rc, out = citadel.tools.run_cmd('git rev-parse --abbrev-ref HEAD')
         if rc == 0:
             branch_name = out.strip()
-            logging.debug('Git repo detected. Branch: %s' % (branch_name))
+            logging.debug('Git repo detected. Branch: %s', branch_name)
 
         # AccuRev
-        rc, out = tools.run_cmd('accurev info')
+        rc, out = citadel.tools.run_cmd('accurev info')
         if rc == 0:
             for line in out.splitlines():
                 if line.strip().startswith('Workspace/Ref'):
                     ws = line.split(": ")[-1]
-                    rc, basis = tools.run_cmd('accurev show -s %s streams' % (ws))
+                    rc, basis = citadel.tools.run_cmd('accurev show -s %s streams' % (ws))
                     branch_name = basis.splitlines()[-1].split()[1].strip()
-                    logging.debug('AccuRev repo detected: %s' % (branch_name))
+                    logging.debug('AccuRev repo detected: %s', branch_name)
                     break
 
         return branch_name

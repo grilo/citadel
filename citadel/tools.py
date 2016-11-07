@@ -7,6 +7,10 @@ import subprocess
 import shlex
 import distutils.spawn
 import plistlib
+import collections
+import re
+
+import citadel.yaml
 
 
 def get_version(file):
@@ -64,3 +68,51 @@ def get_branch_name(directory):
 
     os.chdir(old_dir)
     return branch_name
+
+def unlock_keychain(keychain, password):
+    return '\n'.join([
+        'echo "Unlocking keychain for code signing."',
+        '/usr/bin/security list-keychains -s "%s"' % (keychain),
+        '/usr/bin/security default-keychain -d user -s "%s"' % (keychain),
+        '/usr/bin/security unlock keychain -p "%s" "%s"' % (password, keychain),
+        '/usr/bin/security set-keychain-settings -t 7200 "%s"' % (keychain),
+    ])
+
+def codesign_verify(ipafile):
+    return '\n'.join([
+        'unzip -oq -d "verifycodesign" "%s"' % (ipafile),
+        'unpacked_app="$(ls verifycodesign/Payload/)"',
+        'cd verifycodesign/Payload',
+        'if ! codesign --verify --verbose=4 "$unpacked_app" --no-strict ; then',
+        '    codesign -d -r -vvvvv "$unpacked_app"',
+        '    echo "The application is not signed correctly."',
+        '    echo "This may mean out of date certificate chains, probably hidden."',
+        '    rm -fr "verifycodesign"',
+        '    exit 1',
+        'fi',
+        'rm -fr "verifycodesign"',
+    ])
+
+def ordered_load(stream, Loader=citadel.yaml.Loader, object_pairs_hook=collections.OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        citadel.yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+    return citadel.yaml.load(stream, OrderedLoader)
+
+def filter_secrets(lines):
+    filtered = []
+    for line in lines:
+        if re.search('.*password.*', line, flags=re.IGNORECASE):
+            subbed = re.sub(r'(password[\s:=]+)([\'"]*.*[\'"]*)[\s$].*', r'\1(*** hidden ***) ', line)
+            filtered.append(subbed)
+        elif re.search('.*secret.*', line, flags=re.IGNORECASE):
+            subbed = re.sub(r'(secret[\s:=]+)([\'"]*.*[\'"]*)[\s$]', r'\1(*** hidden ***) ', line)
+            filtered.append(subbed)
+        else:
+            filtered.append(line)
+    return filtered

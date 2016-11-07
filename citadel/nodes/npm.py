@@ -2,16 +2,16 @@
 
 import glob
 
-import nodes.root
-import tools
+import citadel.nodes.root
+import citadel.tools
 
 
-class Npm(nodes.root.Node):
+class Npm(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Npm, self).__init__(yml, path)
 
-        npm_exec = tools.get_executable('npm')
+        npm_exec = citadel.tools.get_executable('npm')
         self.output.append('npm --version')
 
         if 'build' in path:
@@ -35,7 +35,7 @@ class Npm(nodes.root.Node):
                     self.publish_pkg(pkg, registry, scope)
 
     def publish_pkg(self, pkg, registry=None, scope=None):
-        npm_exec = tools.get_executable('npm')
+        npm_exec = citadel.tools.get_executable('npm')
         cmd = npm_exec
         if registry:
             cmd += ' --registry %s' % (registry)

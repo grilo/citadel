@@ -3,11 +3,11 @@
 import logging
 import os
 
-import nodes.root
-import tools
+import citadel.nodes.root
+import citadel.tools
 
 
-class Xcode(nodes.root.Node):
+class Xcode(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Xcode, self).__init__(yml, path)
@@ -18,9 +18,9 @@ class Xcode(nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        xcode_exec = tools.get_executable('xcodebuild')
-        if not xcode_exec:
-            self.add_error('Unable to find xcodebuild in the path.')
+        xcode_exec = citadel.tools.get_executable('xcodebuild')
+        #if not xcode_exec:
+        #    self.add_error('Unable to find xcodebuild in the path.')
 
 
         if 'build' in path:
@@ -67,12 +67,8 @@ class Xcode(nodes.root.Node):
                     self.add_error('A password is required when a keychain has been specified (keychain_password).')
                 if not 'OTHER_CODE_SIGN_FLAGS' in yml.keys():
                     yml['OTHER_CODE_SIGN_FLAGS'] = ''
-                yml['OTHER_CODE_SIGN_FLAGS'] += ' "--keychain \'%s\'' % (yml['keychain'])
-                self.output.append('echo "Unlocking keychain for code signing."')
-                self.output.append('/usr/bin/security list-keychains -s "%s"' % (yml['keychain']))
-                self.output.append('/usr/bin/security default-keychain -d user -s "%s"' % (yml['keychain']))
-                self.output.append('/usr/bin/security unlock keychain -p "%s" "%s"' % (yml['keychain_password'], yml['keychain']))
-                self.output.append('/usr/bin/security set-keychain-settings -t 7200 "%s"' % (yml['keychain']))
+                yml['OTHER_CODE_SIGN_FLAGS'] += ' "--keychain \'%s\'"' % (yml['keychain'])
+                self.output.append(citadel.tools.unlock_keychain(yml['keychain'], yml['keychain_password']))
             else:
                 logging.warning('No "keychain" found, assuming it\'s already prepared.')
 
@@ -105,3 +101,4 @@ class Xcode(nodes.root.Node):
             export_cmd.append('-archivePath "%s"' % (archive_path))
             export_cmd.append('-exportPath "%s"' % (export_path))
             self.output.append(self.format_cmd(export_cmd))
+            self.output.append(citadel.tools.codesign_verify(export_path))

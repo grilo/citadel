@@ -2,10 +2,7 @@
 
 import os
 import sys
-import inspect
 import logging
-import distutils.spawn
-import extlibs.yaml
 
 
 class Node(object):
@@ -14,7 +11,7 @@ class Node(object):
         self.yml = yml
         self.path = path
         self.environment = environment
-        logging.debug('Loading (%s): %s' % (self.__class__.__name__, "/".join(path)))
+        logging.debug('Loading (%s): %s', self.__class__.__name__, "/".join(path))
         self.errors = []
         self.output = []
         self.children = []
@@ -35,16 +32,12 @@ class Node(object):
         sys.path.append(directory)
         try:
             module = __import__(name, globals(), locals(), [], -1)
-        except SyntaxError as e:
-            raise e
-        except ImportError as e:
-            pass
-        try:
-            module = __import__(name, globals(), locals(), [], -1)
             class_instance = getattr(module, name.capitalize())
             del sys.path[-1]
             return class_instance
-        except:
+        except SyntaxError as e:
+            raise e
+        except ImportError as e:
             raise NotImplementedError("Unable to find requested module in path: %s" % (path))
 
     def _parse_children(self, yml):
@@ -55,7 +48,7 @@ class Node(object):
             return
         for k in yml.keys():
             try:
-                class_instance = self.__load_plugin(k, os.path.join('nodes', k + '.py'))
+                class_instance = self.__load_plugin(k, os.path.join(sys.path[0], 'citadel', 'nodes', k + '.py'))
                 self.children.append(class_instance(yml[k], self.path + [k]))
             except NotImplementedError:
                 pass
@@ -64,7 +57,7 @@ class Node(object):
         self.errors.append('%s: %s' % ("/".join(self.path), msg))
 
     def format_cmd(self, command_list):
-        return " \ \n    ".join(command_list)
+        return ' \ \n    '.join(command_list)
 
     def get_errors(self):
         for child in self.children:

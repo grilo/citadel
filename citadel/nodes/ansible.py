@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import nodes.root
-import tools
+import citadel.nodes.root
+import citadel.tools
 
 
-class Ansible(nodes.root.Node):
+class Ansible(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Ansible, self).__init__(yml, path)
@@ -16,7 +16,7 @@ class Ansible(nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        ansible_exec = tools.get_executable('ansible-playbook')
+        ansible_exec = citadel.tools.get_executable('ansible-playbook')
 
         if 'deploy' in path:
             if not 'inventory' in yml.keys():

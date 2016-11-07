@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 import logging
-import os
 
-import nodes.root
-import tools
+import citadel.nodes.root
+import citadel.tools
 
 
-class Gradle(nodes.root.Node):
+class Gradle(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Gradle, self).__init__(yml, path)
@@ -18,10 +17,10 @@ class Gradle(nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        gradle_exec = tools.get_executable('./gradlew')
+        gradle_exec = citadel.tools.get_executable('./gradlew')
         if not gradle_exec:
             logging.debug('Unable to find gradlew wrapper, looking in $PATH.')
-            gradle_exec = tools.get_executable('gradle')
+            gradle_exec = citadel.tools.get_executable('gradle')
             if not gradle_exec:
                 self.add_error('Unable to find neither "gradlew" nor "gradle" in $PATH.')
 
