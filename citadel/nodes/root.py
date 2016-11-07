@@ -57,7 +57,7 @@ class Node(object):
         self.errors.append('%s: %s' % ("/".join(self.path), msg))
 
     def format_cmd(self, command_list):
-        return ' \ \n    '.join(command_list)
+        return ' \\\n  '.join(command_list)
 
     def get_errors(self):
         for child in self.children:
