@@ -67,8 +67,10 @@ class Xcode(citadel.nodes.root.Node):
                     self.add_error('A password is required when a keychain has been specified (keychain_password).')
                 if not 'OTHER_CODE_SIGN_FLAGS' in yml.keys():
                     yml['OTHER_CODE_SIGN_FLAGS'] = ''
-                yml['OTHER_CODE_SIGN_FLAGS'] += ' "--keychain \'%s\'"' % (yml['keychain'])
+                yml['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (yml['keychain'])
                 self.output.append(citadel.tools.unlock_keychain(yml['keychain'], yml['keychain_password']))
+                del yml['keychain']
+                del yml['keychain_password']
             else:
                 logging.warning('No "keychain" found, assuming it\'s already prepared.')
 
