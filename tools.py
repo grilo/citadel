@@ -32,9 +32,9 @@ def read_ipa_version(file):
 
 def get_alternatives(binary):
     try:
-        rc, out = self.run_cmd('update-alternatives --list %s' % (binary))
+        rc, out = run_cmd('update-alternatives --list %s' % (binary))
     except OSError:
-        rc, out = self.run_cmd('/usr/sbin/update-alternatives --display %s' % (binary))
+        rc, out = run_cmd('/usr/sbin/update-alternatives --display %s' % (binary))
     return out.splitlines()
 
 def run_cmd(cmd):
@@ -45,3 +45,22 @@ def run_cmd(cmd):
 def get_executable(executable):
     # Not sure if this is python3 compatible
     return distutils.spawn.find_executable(executable)
+
+def get_branch_name(directory):
+    branch_name = None
+    old_dir = os.getcwd()
+    os.chdir(directory)
+    # Git
+    rc, out = tools.run_cmd('git rev-parse --abbrev-ref HEAD')
+    if rc == 0:
+        branch_name = out.strip()
+        logging.debug('Git repo detected. Branch: %s' % (branch_name))
+    # AccuRev
+    rc, out = tools.run_cmd('accurev info')
+    if rc == 0:
+        lines = [line for line in out.splitlines() if line.strip().startswith('Basis')]
+        branch_name = lines[0].split(": ")[-1]
+        logging.debug('AccuRev repo detected: %s' % (branch_name))
+
+    os.chdir(old_dir)
+    return branch_name

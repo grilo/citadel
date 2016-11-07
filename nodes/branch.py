@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 
 import nodes.root
 import tools
@@ -10,8 +11,8 @@ import tools
 class Branch(nodes.root.Node):
 
     def __init__(self, yml, path):
-        """Conditional execution based on branch name."""
-        if self.get_branch_name() == yml['name']:
+        """Conditional execution based on branch name (regex match)."""
+        if re.search(yml['name'], self.get_branch_name()):
             super(Branch, self).__init__(yml, path)
         else:
             # Since we've prevented our recursive stuff to go on, 
