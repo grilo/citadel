@@ -14,8 +14,6 @@ import re
 import extlibs.yaml
 import nodes.root
 
-import settings
-
 
 def ordered_load(stream, Loader=extlibs.yaml.Loader, object_pairs_hook=collections.OrderedDict):
     class OrderedLoader(Loader):
@@ -60,8 +58,9 @@ def main():
 
     args = parser.parse_args()
 
-    logging.basicConfig(format=settings.log_format)
-    logging.getLogger().setLevel(getattr(logging, settings.log_level.upper()))
+    logging.basicConfig(format='%(asctime)s::%(levelname)s::%(message)s')
+    logging.getLogger().setLevel(getattr(logging, 'DEBUG'))
+
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
