@@ -105,29 +105,17 @@ def ordered_load(stream, Loader=citadel.yaml.Loader, object_pairs_hook=collectio
         construct_mapping)
     return citadel.yaml.load(stream, OrderedLoader)
 
-def get_provisioning_profile(scheme, keychain):
-    app_id = None
-    for root, dirs, files in os.walk('.'):
-        for file in files:
-            if file.endswith('%s.plist' % (scheme)):
-                with open(file) as plist:
-                    data = plistlib.readPlistFromString(plist.read())
-                    app_id = data['CFBundleIdentifier']
-                    break
-    if not app_id:
-        return None
-
-    cmd = 'python /home/jenkins/CLI/utils/osx_pprofile.py -a %s -k %s' % (app_id, keychain)
-
+def get_provisioning_profile(app_id, keychain):
+    cmd = 'python /home/jenkins/CLI/utils/ppbuddy.py -a %s -k %s' % (app_id, keychain)
     return '\n'.join([
+        'cmd="%s"' % (cmd),
         'if [[ $ENVIRONMENT =~  PRO ]] ; then',
-        '    output=$(%s)' % (cmd),
-        'else',
-        '    output=$(%s --production)' % (cmd),
+        '    cmd="$cmd --production"',
         'fi',
-        'UUID=$(echo "$pp_command" | head -1 | awk -F@ \'{print $1}\')',
-        'CODE_SIGN_IDENTITY=$(echo "$pp_command" | head -1 | awk -F@ \'{print $3}\')',
-        'TEAM_ID=$(echo "$pp_command" | head -1 | awk -F@ \'{print $4}\')',
+        'output=$($cmd)',
+        'UUID=$(echo "$output" | head -1 | awk -F@ \'{print $1}\')',
+        'CODE_SIGN_IDENTITY=$(echo "$output" | head -1 | awk -F@ \'{print $3}\')',
+        'TEAM_ID=$(echo "$output" | head -1 | awk -F@ \'{print $4}\')',
     ])
 
 def filter_secrets(lines):

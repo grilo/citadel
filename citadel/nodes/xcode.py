@@ -19,8 +19,8 @@ class Xcode(citadel.nodes.root.Node):
         # Unsure if this is python3 compatible
         # Always display maven's version
         xcode_exec = citadel.tools.get_executable('xcodebuild')
-        #if not xcode_exec:
-        #    self.add_error('Unable to find xcodebuild in the path.')
+        if not xcode_exec:
+            self.add_error('Unable to find xcodebuild in the path.')
 
 
         if 'build' in path:
@@ -33,6 +33,14 @@ class Xcode(citadel.nodes.root.Node):
             scheme = None
             archive_path = None
             export_path = None
+            keychain = None
+            app_id = None
+
+            if not 'app_id' in yml.keys():
+                self.add_error('An app_id is mandatory (es.ingdirect.www).')
+            else:
+                app_id = yml['app_id']
+                del yml['app_id']
 
             if not 'scheme' in yml.keys():
                 self.add_error('A scheme is necessary to know what to build.')
@@ -44,11 +52,6 @@ class Xcode(citadel.nodes.root.Node):
             else:
                 archive_path = os.path.join(os.getcwd(), yml['archivePath'])
                 del yml['archivePath']
-            if not 'configuration' in yml.keys():
-                self.add_error('A configuration is required (Release/Debug).')
-            else:
-                configuration = yml['configuration']
-                del yml['configuration']
 
             cmd.append(' %s' % (lifecycle))
             cmd.append('-scheme "%s"' % (scheme))
@@ -64,22 +67,27 @@ class Xcode(citadel.nodes.root.Node):
             if 'project' in yml.keys():
                 cmd.append('-project "%s"' % (yml['project']))
                 del yml['project']
+            if 'configuration' in yml.keys():
+                cmd.append('-configuration "%s"' % (yml['configuration']))
+                del yml['configuration']
 
             if 'keychain' in yml.keys():
                 if not 'keychain_password' in yml.keys():
                     self.add_error('A password is required when a keychain has been specified (keychain_password).')
                 if not 'OTHER_CODE_SIGN_FLAGS' in yml.keys():
                     yml['OTHER_CODE_SIGN_FLAGS'] = ''
-                yml['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (yml['keychain'])
-                self.output.append(citadel.tools.unlock_keychain(yml['keychain'], yml['keychain_password']))
+                keychain = yml['keychain']
+                yml['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (keychain)
+                self.output.append(citadel.tools.unlock_keychain(keychain, yml['keychain_password']))
                 del yml['keychain']
                 del yml['keychain_password']
             else:
                 logging.warning('No "keychain" found, assuming it\'s already prepared.')
 
             if not 'CODE_SIGN_IDENTITY' in yml.keys() \
-                and not 'PROVISIONING_PROFILE_SPECIFIER' in yml.keys():
-                self.output.append(citadel.tools.get_provisioning_profile(scheme, keychain))
+                and not 'PROVISIONING_PROFILE_SPECIFIER' in yml.keys() \
+                and keychain:
+                self.output.append(citadel.tools.get_provisioning_profile(app_id, keychain))
                 yml['CODE_SIGN_IDENTITY'] = '$CODE_SIGN_IDENTITY'
                 yml['PROVISIONING_PROFILE_SPECIFIER'] = '$TEAM_ID/$UUID'
 
