@@ -11,16 +11,13 @@ class Branch(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         """Conditional execution based on branch name (regex match)."""
-        if re.search(yml['name'], self.get_branch_name()):
+        branch_name = self.get_branch_name()
+        if re.search(yml, branch_name):
+            logging.debug('Matched branch name for %s: %s', '/'.join(path), branch_name)
             super(Branch, self).__init__(yml, path)
         else:
-            # Since we've prevented our recursive stuff to go on,
-            # we need to do our own init and pretend we're the real
-            # deal.
-            self.children = []
-            self.errors = []
-            self.output = []
-            logging.debug('Skipping since it doesn\'t match branch name.')
+            logging.debug('Branch name mismatch for %s. Expected [%s] instead got [%s])', '/'.join(path), yml, branch_name)
+            self.skip = True
 
     def get_branch_name(self):
         branch_name = None
@@ -28,18 +25,20 @@ class Branch(citadel.nodes.root.Node):
         # Git
         rc, out = citadel.tools.run_cmd('git rev-parse --abbrev-ref HEAD')
         if rc == 0:
+            logging.debug('Git repo detected.')
             branch_name = out.strip()
-            logging.debug('Git repo detected. Branch: %s', branch_name)
 
         # AccuRev
         rc, out = citadel.tools.run_cmd('accurev info')
         if rc == 0:
+            logging.debug('AccuRev repo detected.')
             for line in out.splitlines():
-                if line.strip().startswith('Workspace/Ref'):
-                    ws = line.split(": ")[-1]
-                    rc, basis = citadel.tools.run_cmd('accurev show -s %s streams' % (ws))
-                    branch_name = basis.splitlines()[-1].split()[1].strip()
-                    logging.debug('AccuRev repo detected: %s', branch_name)
+                if line.strip().startswith('Basis'):
+                    branch_name = line.split(":")[-1].strip()
                     break
 
+        if not branch_name:
+            logging.warning('Unable to detect any branch name in the current directory.')
+            return ''
+        logging.info('Current branch: %s', branch_name)
         return branch_name

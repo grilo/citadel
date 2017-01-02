@@ -26,7 +26,7 @@ class Ansible(citadel.nodes.root.Node):
                 self.add_error('Deploying with ansible requires a "playbook" to be specified.')
                 return
 
-            cmd = ['%s -i %s %s' % (ansible_exec, yml['inventory'], yml['playbook'])]
+            cmd = ['%s -v -i %s %s' % (ansible_exec, yml['inventory'], yml['playbook'])]
 
             for k, v in yml.items():
                 if k == 'inventory' or k == 'playbook':

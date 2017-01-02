@@ -11,14 +11,16 @@ import citadel.tools
 import citadel.nodes.root
 
 
-def load(yml_file, environment):
+def load(yml_file, environment, ignore):
+
 
     with open(yml_file) as fd:
         old_cwd = os.getcwd()
         os.chdir(os.path.dirname(yml_file))
 
         ordered_yml = citadel.tools.ordered_load(fd, citadel.yaml.SafeLoader)
-        builder = citadel.nodes.root.Node(ordered_yml, [], environment)
+
+        builder = citadel.nodes.root.Node(ordered_yml, [], environment, ignore)
         errors = builder.get_errors()
 
         if len(errors) > 0:

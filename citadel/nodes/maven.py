@@ -17,7 +17,7 @@ class Maven(citadel.nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        mvn_exec = citadel.tools.get_executable('mvn') + ' -V'
+        mvn_exec = citadel.tools.get_executable('mvn') + ' -V -B'
         logging.debug('Found maven executable: %s', mvn_exec)
 
         if 'build' in path:
@@ -45,14 +45,29 @@ class Maven(citadel.nodes.root.Node):
             if not 'file' in yml.keys():
                 self.add_error('Publishing with maven requires "file" to be specified.')
                 return
-            cmd = ['%s deploy:deploy-file' % (mvn_exec)]
+            if not 'artifactId' in yml.keys():
+                self.add_error('artifactId is required')
+            if not 'groupId' in yml.keys():
+                self.add_error('groupId is required')
+
             if not 'version' in yml.keys():
-                self.output.append(citadel.tools.get_version(yml['file']))
+                version = citadel.tools.get_version(yml['file'], yml)
+                if not version:
+                    self.add_error('Unable to automatically induce version for: %s' % (yml['file']))
+                self.output.append(version)
                 yml['version'] = '${VERSION}'
             if 'snapshot' in yml.keys():
                 if yml['snapshot']:
                     yml['version'] += '-SNAPSHOT'
                 del yml['snapshot']
+
+
+            if 'opts' in yml.keys():
+                opts = yml['opts']
+                del yml['opts']
+
+            cmd = ['%s deploy:deploy-file %s' % (mvn_exec, opts)]
+
             for k, v in yml.items():
-                cmd.append('-D%s=%s' % (k, v))
+                cmd.append('-D%s="%s"' % (k, v))
             self.output.append(self.format_cmd(cmd))

@@ -17,12 +17,10 @@ class Gradle(citadel.nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        gradle_exec = citadel.tools.get_executable('./gradlew')
+        gradle_exec = citadel.tools.get_executable('gradle')
         if not gradle_exec:
-            logging.debug('Unable to find gradlew wrapper, looking in $PATH.')
-            gradle_exec = citadel.tools.get_executable('gradle')
-            if not gradle_exec:
-                self.add_error('Unable to find neither "gradlew" nor "gradle" in $PATH.')
+            logging.debug('Unable to find gradle in $PATH, using default wrapper.')
+            gradle_exec = './gradlew'
 
         if 'build' in path:
 

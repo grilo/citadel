@@ -1,4 +1,4 @@
-#!/usr/bin/env python    
+#!/usr/bin/env python
 
 import zipfile
 import glob
@@ -10,18 +10,20 @@ import plistlib
 import collections
 import re
 import plistlib
+import logging
 
 import citadel.yaml
 
-
-def get_version(file):
+def get_version(file, properties):
     version = None
     if file.endswith('.apk'):
         version = read_apk_version(file)
     elif file.endswith('.jar') or file.endswith('.war') or file.endswith('.ear'):
-        return read_jar_version(file)
+        return read_jar_version(file, properties['groupId'], properties['artifactId'])
     elif file.endswith('.ipa'):
         return read_ipa_version(file)
+    else:
+        logging.critical('Unknown file extension which prevents me from finding its version: %s', file)
     return version
 
 def read_apk_version(file):
@@ -29,17 +31,23 @@ def read_apk_version(file):
     cmd += 'VERSION=$($AAPT_TOOL d badging "%s" | grep versionName | awk -F\\\' \'{print $4"-"$6}\')' % (file)
     return cmd
 
-def read_jar_version(file):
-    return "unzip -p '%s' \*/pom.properties | grep version | awk -F= '{print $2}'" % (file)
+def read_jar_version(file, group_id, artifact_id):
+    return "VERSION=$(unzip -p '%s' '*%s*/*%s*/pom.properties' | grep version | awk -F= '{print $2}')" % (file, group_id, artifact_id)
 
 def read_ipa_version(file):
-    return "VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' /dev/stdin <<< $(unzip -p '%s' \*/Info.plist))" % (file)
+    return """VERSION=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties::CFBundleVersion" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")
+VERSION=$VERSION-$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")"""
 
 def get_alternatives(binary):
     try:
         rc, out = run_cmd('update-alternatives --list %s' % (binary))
     except OSError:
         rc, out = run_cmd('/usr/sbin/update-alternatives --display %s' % (binary))
+        outlines = []
+        for line in out.splitlines():
+            if line.startswith('/'):
+                outlines.append(re.sub(r' - .*', '', line))
+        out = "\n".join(outlines)
     return out.splitlines()
 
 def run_cmd(cmd):
@@ -91,6 +99,7 @@ def codesign_verify(ipafile):
         '    rm -fr "verifycodesign"',
         '    exit 1',
         'fi',
+        'cd -',
         'rm -fr "verifycodesign"',
     ])
 
@@ -106,7 +115,10 @@ def ordered_load(stream, Loader=citadel.yaml.Loader, object_pairs_hook=collectio
     return citadel.yaml.load(stream, OrderedLoader)
 
 def get_provisioning_profile(app_id, keychain):
-    cmd = 'python /home/jenkins/CLI/utils/ppbuddy.py -a %s -k %s' % (app_id, keychain)
+    cmd = 'os_pprofile -k %s' % (keychain)
+    if app_id:
+        cmd += ' -a %s' % (app_id)
+
     return '\n'.join([
         'cmd="%s"' % (cmd),
         'if [[ $ENVIRONMENT =~  PRO ]] ; then',
@@ -114,6 +126,7 @@ def get_provisioning_profile(app_id, keychain):
         'fi',
         'output=$($cmd)',
         'UUID=$(echo "$output" | head -1 | awk -F@ \'{print $1}\')',
+        'PP_NAME=$(echo "$output" | head -1 | awk -F@ \'{print $2}\')',
         'CODE_SIGN_IDENTITY=$(echo "$output" | head -1 | awk -F@ \'{print $3}\')',
         'TEAM_ID=$(echo "$output" | head -1 | awk -F@ \'{print $4}\')',
     ])

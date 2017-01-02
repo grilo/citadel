@@ -7,6 +7,7 @@ import logging
 import argparse
 import sys
 import os
+import re
 
 import citadel
 
@@ -25,6 +26,8 @@ def main():
         help="A YAML file used to generate the build script.")
     parser.add_argument("-e", "--environment", default='', \
         help="Set the execution environment.")
+    parser.add_argument("-i", "--ignore", \
+        help="Prevent/ignore the specified keys from loading.")
 
     args = parser.parse_args()
 
@@ -34,6 +37,13 @@ def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
+    if not args.ignore:
+        args.ignore = []
+    else:
+        normalized = re.sub('[|;, ]+', ' ', args.ignore).split()
+        args.ignore = [x.encode('utf8') for x in normalized]
+
+
     if os.path.isdir(args.file):
         args.file = os.path.join(args.file, 'citadel.yml')
     else:
@@ -42,7 +52,7 @@ def main():
     if not os.path.isfile(args.file):
         raise SystemExit('Unable to find file: %s' % (args.file))
 
-    output = citadel.load(args.file, args.environment)
+    output = citadel.load(args.file, args.environment, args.ignore)
     if not output:
         raise SystemExit('Errors were found while processing: %s' % (args.file))
     print output
