@@ -1,0 +1,49 @@
+platform: android
+language: java1.8
+
+environment:
+  - ANDROID_HOME=/usr/lib/android
+
+build:
+  gradle:
+    lifecycle: clean assemble
+
+publish:
+  dev:
+    branch: feature/broker
+    maven:
+      file: build/outputs/apk/SomeName-Android-debug-unaligned.apk
+      artifactId: APPLICATION_NAME
+      groupId: com.company.android
+      packaging: apk
+      url: http://artifactory.company.com:80/artifactory/dev-repo
+      snapshot: True
+      generatePom: True
+      repositoryId: dev-repo
+      opts: -B -U -s /home/jenkins/.m2/settings.xml
+  production:
+    branch: master
+    maven:
+      file: build/outputs/apk/SomeName-Android-release-unsigned.apk
+      artifactId: APPLICATION_NAME
+      groupId: com.company.android
+      packaging: apk
+      url: http://artifactory.company.name:80/artifactory/pro-repo
+      snapshot: False
+      generatePom: True
+      repositoryId: pro-repo
+      opts: -B -U -s /home/jenkins/.m2/settings.xml
+
+deploy:
+  dev:
+    branch: feature/broker
+    ansible:
+      inventory: /opt/deployment/ansible/environments/development
+      playbook: /opt/deployment/ansible/playbooks/deploy_nativeapps.yml
+      platform: ANDROID
+      packaging: apk
+      artifact_group: com.company.android
+      artifact_id: APPLICATION_NAME
+      version: $VERSION-SNAPSHOT
+    script:
+      - echo "Success!"

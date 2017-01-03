@@ -1,0 +1,78 @@
+platform: ios
+language: xcode81
+
+build:
+  script:
+    - rm -fr build
+    - chmod -R +w *
+    - pod setup
+    - pod install
+  development:
+    branch: master
+    xcode:
+      app_id: com.company.app
+      lifecycle: clean archive
+      scheme: SomeName 
+      workspace: SomeName.xcworkspace
+      archivePath: build/SomeName.xcarchive
+      configuration: Debug
+      keychain: /Users/jenkins/Library/Keychains/default.keychain
+      keychain_password: $KEYCHAIN_PASSWORD
+      ENABLE_BITCODE: NO
+      IPHONEOS_DEPLOYMENT_TARGET: 6.0
+  production:
+    branch: prod
+    script:
+      - export ENVIRONMENT=PRO
+    xcode:
+      app_id: com.company.app
+      lifecycle: clean archive
+      scheme: "SomeName release"
+      workspace: SomeName.xcworkspace
+      archivePath: build/SomeName.xcarchive
+      configuration: Release
+      keychain: /Users/jenkins/Library/Keychains/default.keychain
+      keychain_password: $KEYCHAIN_PASSWORD
+      entitlement: "SomeName/SomeName release.entitlements"
+      ENABLE_BITCODE: NO
+      IPHONEOS_DEPLOYMENT_TARGET: 6.0
+
+publish:
+  development:
+    branch: master
+    maven:
+      file: build/SomeName.ipa
+      artifactId: APPLICATION_NAME
+      groupId: com.company.app
+      repositoryId: dev-repository
+      packaging: ipa
+      snapshot: True
+      url: http://artifactory.company.com:80/artifactory/dev-repository/
+      opts: -U -s /home/jenkins/.m2/settings.xml
+  production:
+    branch: (prod|master)
+    script:
+      - unzip -t build/SomeName.ipa | grep 'Settings.bundle' && echo "Build in Debug mode!" && exit 1
+    maven:
+      file: "build/SomeName release.ipa"
+      artifactId: APPLICATION_NAME
+      groupId: com.company.app
+      repositoryId: pro-repository
+      packaging: ipa
+      snapshot: False
+      url: http://artifactory.company.com:80/artifactory/pro-repository/
+      opts: -U -s /home/jenkins/.m2/settings.xml
+
+deploy:
+  development:
+    branch: master
+    ansible:
+      inventory: /opt/deployment/ansible/environments/development
+      playbook: /opt/deployment/ansible/playbooks/deploy_nativeapps.yml
+      platform: IOS
+      packaging: ipa
+      artifact_group: com.company.app
+      artifact_id: APPLICATION_NAME
+      version: $VERSION-SNAPSHOT
+    script:
+      - echo "Everything went fine!"

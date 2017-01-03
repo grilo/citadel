@@ -1,0 +1,22 @@
+platform: rhel6
+language: java1.8
+
+build:
+  - maven:
+      lifecycle: clean install -Pdev
+
+publish:
+  - maven:
+      file: target/my-app-0.0.1-SNAPSHOT.jar
+      artifactId: my-app
+      groupId: com.company.someproject
+      packaging: jar
+      url: http://artifactory.company.com:80/artifactory/dev-repo
+      snapshot: True
+      generatePom: False
+      repositoryId: dev-repo
+      opts: -q -B -U -s /home/jenkins/.m2/settings.xml
+
+deploy:
+  - script:
+    - bash my-app/builder/src/main/resources/scripts/deploy.sh
