@@ -22,25 +22,14 @@ class Xcode(citadel.nodes.root.Node):
 
         if 'build' in path:
 
-            # Set default values if needed
-            if not 'lifecycle' in yml.keys():
-                yml['lifecycle'] = 'clean archive'
-            if not 'OTHER_CODE_SIGN_FLAGS' in yml.keys():
-                yml['OTHER_CODE_SIGN_FLAGS'] = ''
-
-            if not 'CONFIGURATION_BUILD_DIR' in yml.keys():
-                yml['CONFIGURATION_BUILD_DIR'] = 'build'
-            yml['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), yml['CONFIGURATION_BUILD_DIR'])
-
-            if not 'CODE_SIGN_IDENTITY' in yml.keys():
-                yml['CODE_SIGN_IDENTITY'] = '$CODE_SIGN_IDENTITY'
-            if not 'DEVELOPMENT_TEAM' in yml.keys():
-                yml['DEVELOPMENT_TEAM'] = '$TEAM_ID'
-            if not 'PROVISIONING_PROFILE_SPECIFIER' in yml.keys():
-                yml['PROVISIONING_PROFILE_SPECIFIER'] = '$TEAM_ID/$UUID'
-
-            if not 'exportPath' in yml.keys() and 'scheme' in yml.keys():
-                yml['exportPath'] = os.path.join(yml['CONFIGURATION_BUILD_DIR'], yml['scheme'] + '.ipa')
+            self.set_defaults(yml, {
+                'lifecycle': 'clean archive',
+                'OTHER_CODE_SIGN_FLAGS': '',
+                'CONFIGURATION_BUILD_DIR': 'build',
+                'CODE_SIGN_IDENTITY': '$CODE_SIGN_IDENTITY',
+                'DEVELOPMENT_TEAM': '$TEAM_ID',
+                'PROVISIONING_PROFILE_SPECIFIER': '$TEAM_ID/$UUID',
+            })
 
             # Extrac the required values
             validated = self.validate(yml, [
@@ -54,7 +43,6 @@ class Xcode(citadel.nodes.root.Node):
                 'CODE_SIGN_IDENTITY',
                 'DEVELOPMENT_TEAM',
                 'PROVISIONING_PROFILE_SPECIFIER',
-                'exportPath',
                 ('workspace', 'project'),
                 {'keychain': '', 'keychain_password': ''},
                 ])
@@ -62,6 +50,9 @@ class Xcode(citadel.nodes.root.Node):
             for k in validated.keys():
                 del yml[k]
 
+            validated['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), validated['CONFIGURATION_BUILD_DIR'])
+            if not 'exportPath' in validated.keys():
+                validated['exportPath'] = os.path.join(validated['CONFIGURATION_BUILD_DIR'], validated['scheme'] + '.ipa')
 
             self.output.append('echo "Xcodebuild version: $(xcodebuild -version)"')
             self.output.append('echo "Bundle version: $(/usr/bin/agvtool mvers -terse1)"')
@@ -69,20 +60,14 @@ class Xcode(citadel.nodes.root.Node):
             self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/Xcode/DerivedData"/*')
 
             cmd = ['%s' % (xcode_exec)]
-            app_id = None
-
-            if not 'app_id' in yml.keys():
-                logging.critical('An app_id is missing. This will default to wildcard profile - are you sure?')
-            else:
-                app_id = validated['app_id']
 
             lifecycle = validated['lifecycle']
             scheme = validated['scheme']
             archive_path = os.path.join(os.getcwd(), validated['archivePath'])
 
             cmd.append(' %s' % (lifecycle))
-            cmd.append('-scheme "%s"' % (yml['scheme']))
-            cmd.append('-archivePath "%s"' % (archive_path))
+            cmd.append('-scheme "%s"' % (validated['scheme']))
+            cmd.append('-archivePath "%s"' % (validated['archivePath']))
             cmd.append('-configuration "%s"' % (validated['configuration']))
 
             if 'workspace' in validated.keys():
@@ -95,10 +80,10 @@ class Xcode(citadel.nodes.root.Node):
                 del yml['target']
 
             if 'keychain' in validated.keys():
-                yml['OTHER_CODE_SIGN_FLAGS'] = validated['OTHER_CODE_SIGN_FLAGS']
-                yml['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (validated['keychain'])
+                validated['OTHER_CODE_SIGN_FLAGS'] = validated['OTHER_CODE_SIGN_FLAGS']
+                validated['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (validated['keychain'])
                 self.output.append(citadel.tools.unlock_keychain(validated['keychain'], validated['keychain_password']))
-                self.output.append(citadel.tools.get_provisioning_profile(app_id, validated['keychain']))
+                self.output.append(citadel.tools.get_provisioning_profile(validated['app_id'], validated['keychain']))
             else:
                 logging.warning('No "keychain" found, assuming it\'s already prepared.')
 
