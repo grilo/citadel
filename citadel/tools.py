@@ -115,7 +115,7 @@ def ordered_load(stream, Loader=citadel.yaml.Loader, object_pairs_hook=collectio
     return citadel.yaml.load(stream, OrderedLoader)
 
 def get_provisioning_profile(app_id, keychain):
-    cmd = 'os_pprofile -k %s' % (keychain)
+    cmd = 'osx_pprofile -k %s' % (keychain)
     if app_id:
         cmd += ' -a %s' % (app_id)
 
