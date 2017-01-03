@@ -33,7 +33,7 @@ build:
       configuration: Release
       keychain: /Users/jenkins/Library/Keychains/default.keychain
       keychain_password: $KEYCHAIN_PASSWORD
-      entitlement: "SomeName/SomeName release.entitlements"
+      CODE_SIGN_ENTITLEMENTS: "SomeName/SomeName release.entitlements"
       ENABLE_BITCODE: NO
       IPHONEOS_DEPLOYMENT_TARGET: 6.0
 
