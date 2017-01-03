@@ -59,6 +59,9 @@ class Xcode(citadel.nodes.root.Node):
                 {'keychain': '', 'keychain_password': ''},
                 ])
 
+            for k in validated.keys():
+                del yml[k]
+
 
             self.output.append('echo "Xcodebuild version: $(xcodebuild -version)"')
             self.output.append('echo "Bundle version: $(/usr/bin/agvtool mvers -terse1)"')
@@ -92,6 +95,7 @@ class Xcode(citadel.nodes.root.Node):
                 del yml['target']
 
             if 'keychain' in validated.keys():
+                yml['OTHER_CODE_SIGN_FLAGS'] = validated['OTHER_CODE_SIGN_FLAGS']
                 yml['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (validated['keychain'])
                 self.output.append(citadel.tools.unlock_keychain(validated['keychain'], validated['keychain_password']))
                 self.output.append(citadel.tools.get_provisioning_profile(app_id, validated['keychain']))
