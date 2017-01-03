@@ -140,7 +140,7 @@ class Node(object):
 
         return validated
 
-    def set_defaults(yml, default_values):
+    def set_defaults(self, yml, default_values):
         for k, v in default_values.items():
             if not k in yml:
                 yml[k] = v
