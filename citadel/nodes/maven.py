@@ -71,6 +71,8 @@ class Maven(citadel.nodes.root.Node):
                 validated['version'] += '-SNAPSHOT'
 
             cmd = ['%s deploy:deploy-file %s' % (mvn_exec, validated['opts'])]
+            for k, v in validated.items():
+                cmd.append('-D%s="%s"' % (k, v))          
 
             for k, v in yml.items():
                 cmd.append('-D%s="%s"' % (k, v))
