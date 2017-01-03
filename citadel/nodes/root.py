@@ -139,3 +139,9 @@ class Node(object):
                         validated[f] = dictionary[f]
 
         return validated
+
+    def set_defaults(yml, default_values):
+        for k, v in default_values.items():
+            if not k in yml:
+                yml[k] = v
+        return yml
