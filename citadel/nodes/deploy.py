@@ -7,4 +7,6 @@ class Deploy(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Deploy, self).__init__(yml, path)
-        self.output.append('\necho "### Deploy ###"')
+
+    def to_bash(self):
+        return ['\necho "### Deploy ###"']

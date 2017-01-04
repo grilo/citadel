@@ -20,84 +20,106 @@ class Xcode(citadel.nodes.root.Node):
         if not xcode_exec:
             self.add_error('Unable to find Xcode executable.')
 
-        if 'build' in path:
+        if not 'build' in path:
+            self.add_error('Xcode is only supported under a build directive.')
 
-            self.set_defaults(yml, {
-                'lifecycle': 'clean archive',
-                'OTHER_CODE_SIGN_FLAGS': '',
-                'CONFIGURATION_BUILD_DIR': 'build',
-                'CODE_SIGN_IDENTITY': '$CODE_SIGN_IDENTITY',
-                'DEVELOPMENT_TEAM': '$TEAM_ID',
-                'PROVISIONING_PROFILE_SPECIFIER': '$TEAM_ID/$UUID',
-            })
+        self.defaults = {
+            'lifecycle': 'clean archive',
+            'OTHER_CODE_SIGN_FLAGS': '',
+            'CONFIGURATION_BUILD_DIR': 'build',
+            'CODE_SIGN_IDENTITY': '$CODE_SIGN_IDENTITY',
+            'DEVELOPMENT_TEAM': '$TEAM_ID',
+            'PROVISIONING_PROFILE_SPECIFIER': '$TEAM_ID/$UUID',
+        }
 
-            # Extrac the required values
-            validated = self.validate(yml, [
-                'scheme',
-                'app_id',
-                'archivePath',
-                'configuration',
-                'lifecycle',
-                'OTHER_CODE_SIGN_FLAGS',
-                'CONFIGURATION_BUILD_DIR',
-                'CODE_SIGN_IDENTITY',
-                'DEVELOPMENT_TEAM',
-                'PROVISIONING_PROFILE_SPECIFIER',
-                ('workspace', 'project'),
-                {'keychain': '', 'keychain_password': ''},
-                ])
+        self.requirements = [
+            'scheme',
+            'app_id',
+            'archivePath',
+            'configuration',
+            'lifecycle',
+            'OTHER_CODE_SIGN_FLAGS',
+            'CONFIGURATION_BUILD_DIR',
+            'CODE_SIGN_IDENTITY',
+            'DEVELOPMENT_TEAM',
+            'PROVISIONING_PROFILE_SPECIFIER',
+            ('workspace', 'project'),
+            {'keychain': '', 'keychain_password': ''},
+        ]
 
-            for k in validated.keys():
-                del yml[k]
+    def to_bash(self):
 
-            validated['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), validated['CONFIGURATION_BUILD_DIR'])
-            if not 'exportPath' in validated.keys():
-                validated['exportPath'] = os.path.join(validated['CONFIGURATION_BUILD_DIR'], validated['scheme'] + '.ipa')
+        output = []
+        xcode_exec = citadel.tools.get_executable('xcodebuild')
 
-            self.output.append('echo "Xcodebuild version: $(xcodebuild -version)"')
-            self.output.append('echo "Bundle version: $(/usr/bin/agvtool mvers -terse1)"')
+        self.yml['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), self.yml['CONFIGURATION_BUILD_DIR'])
+        if not 'exportPath' in self.yml.keys():
+            self.yml['exportPath'] = os.path.join(self.yml['CONFIGURATION_BUILD_DIR'], self.yml['scheme'] + '.ipa')
 
-            self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/Xcode/DerivedData"/*')
+        output.append('echo "Xcodebuild version: $(xcodebuild -version)"')
+        output.append('echo "Bundle version: $(/usr/bin/agvtool mvers -terse1)"')
 
-            cmd = ['%s' % (xcode_exec)]
+        output.append('rm -fr "/Users/$(whoami)/Library/Developer/Xcode/DerivedData"/*')
 
-            lifecycle = validated['lifecycle']
-            scheme = validated['scheme']
-            archive_path = os.path.join(os.getcwd(), validated['archivePath'])
+        if 'keychain' in self.yml.keys():
+            self.yml['OTHER_CODE_SIGN_FLAGS'] = self.yml['OTHER_CODE_SIGN_FLAGS']
+            self.yml['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (self.yml['keychain'])
+            output.append(citadel.tools.unlock_keychain(self.yml['keychain'], self.yml['keychain_password']))
+            output.append(citadel.tools.get_provisioning_profile(self.yml['app_id'], self.yml['keychain']))
+        else:
+            logging.warning('No "keychain" found, assuming it\'s already prepared.')
 
-            cmd.append(' %s' % (lifecycle))
-            cmd.append('-scheme "%s"' % (validated['scheme']))
-            cmd.append('-archivePath "%s"' % (validated['archivePath']))
-            cmd.append('-configuration "%s"' % (validated['configuration']))
+        export_cmd = ['%s' % (xcode_exec)]
+        export_cmd.append('-exportArchive')
+        export_cmd.append('-exportFormat ipa')
+        export_cmd.append('-exportProvisioningProfile "$PP_NAME"')
+        export_cmd.append('-archivePath "%s"' % (os.path.join(os.getcwd(), self.yml['archivePath'])))
+        export_cmd.append('-exportPath "%s"' % (self.yml['exportPath']))
 
-            if 'workspace' in validated.keys():
-                cmd.append('-workspace "%s"' % (validated['workspace']))
-            elif 'project' in validated.keys():
-                cmd.append('-project "%s"' % (validated['project']))
+        cmd = ['%s' % (xcode_exec)]
+        cmd.append(' %s' % (self.yml['lifecycle']))
+        cmd.append('-scheme "%s"' % (self.yml['scheme']))
+        cmd.append('-archivePath "%s"' % (self.yml['archivePath']))
+        cmd.append('-configuration "%s"' % (self.yml['configuration']))
+        if 'workspace' in self.yml.keys():
+            cmd.append('-workspace "%s"' % (self.yml['workspace']))
+        elif 'project' in self.yml.keys():
+            cmd.append('-project "%s"' % (self.yml['project']))
 
-            if 'target' in yml.keys():
-                cmd.append('-target "%s"' % (yml['target']))
-                del yml['target']
+        if 'target' in self.yml.keys():
+            cmd.append('-target "%s"' % (self.yml['target']))
+            del self.yml['target']
 
-            if 'keychain' in validated.keys():
-                validated['OTHER_CODE_SIGN_FLAGS'] = validated['OTHER_CODE_SIGN_FLAGS']
-                validated['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (validated['keychain'])
-                self.output.append(citadel.tools.unlock_keychain(validated['keychain'], validated['keychain_password']))
-                self.output.append(citadel.tools.get_provisioning_profile(validated['app_id'], validated['keychain']))
-            else:
-                logging.warning('No "keychain" found, assuming it\'s already prepared.')
+        to_delete = [
+            'scheme',
+            'app_id',
+            'archivePath',
+            'configuration',
+            'lifecycle',
+            'OTHER_CODE_SIGN_FLAGS',
+            'CONFIGURATION_BUILD_DIR',
+            'CODE_SIGN_IDENTITY',
+            'DEVELOPMENT_TEAM',
+            'PROVISIONING_PROFILE_SPECIFIER',
+            'workspace',
+            'project',
+            'keychain',
+            'keychain_password',
+        ]
 
-            for k, v in yml.items():
-                cmd.append('%s="%s"' % (k, v))
-            self.output.append('echo "Building..."')
-            self.output.append(self.format_cmd(cmd))
+        exportPath = self.yml['exportPath']
 
-            self.output.append('echo "Generating IPA file..."')
-            export_cmd = ['%s' % (xcode_exec)]
-            export_cmd.append('-exportArchive')
-            export_cmd.append('-exportFormat ipa')
-            export_cmd.append('-exportProvisioningProfile "$PP_NAME"')
-            export_cmd.append('-archivePath "%s"' % (archive_path))
-            export_cmd.append('-exportPath "%s"' % (validated['exportPath']))
-            self.output.append(self.format_cmd(export_cmd))
-            self.output.append(citadel.tools.codesign_verify(validated['exportPath']))
+        for d in to_delete:
+            if d in self.yml.keys():
+                del self.yml[d]
+
+        for k, v in self.yml.items():
+            cmd.append('%s="%s"' % (k, v))
+
+        output.append('echo "Building..."')
+        output.append(self.format_cmd(cmd))
+        output.append('echo "Generating IPA file..."')
+        output.append(self.format_cmd(export_cmd))
+        output.append(citadel.tools.codesign_verify(exportPath))
+
+        return output

@@ -7,4 +7,6 @@ class Script(citadel.nodes.root.Node):
 
     def __init__(self, yml, path):
         super(Script, self).__init__(yml, path)
-        self.output = yml
+
+    def to_bash(self):
+        return self.yml

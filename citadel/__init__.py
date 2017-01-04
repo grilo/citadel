@@ -5,6 +5,7 @@
 
 import logging
 import os
+import collections
 
 import citadel.yaml
 import citadel.tools
@@ -20,7 +21,20 @@ def load(yml_file, environment, ignore):
 
         ordered_yml = citadel.tools.ordered_load(fd, citadel.yaml.SafeLoader)
 
-        builder = citadel.nodes.root.Node(ordered_yml, [], environment, ignore)
+        # Inject environment into the yaml
+        if not 'environment' in ordered_yml.keys():
+            ordered_yml = collections.OrderedDict([('environment', {})] + ordered_yml.items())
+        elif isinstance(environment, dict):
+            for line in environment.split():
+                if '=' in line:
+                    k, v = line.split('=', 1)
+                    ordered_yml['environment'][k] = v
+
+        # Inject header
+        if not 'header' in ordered_yml.keys():
+            ordered_yml = collections.OrderedDict([('header', '')] + ordered_yml.items())
+
+        builder = citadel.nodes.root.Node(ordered_yml, [], ignore)
         errors = builder.get_errors()
 
         if len(errors) > 0:
@@ -30,7 +44,7 @@ def load(yml_file, environment, ignore):
             os.chdir(old_cwd)
             return False
 
-        output = builder.to_bash()
+        output = builder.to_string()
         logging.debug('Generated script:\n%s' % ('\n'.join(citadel.tools.filter_secrets(output))))
 
         os.chdir(old_cwd)

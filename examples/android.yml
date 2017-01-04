@@ -2,7 +2,7 @@ platform: android
 language: java1.8
 
 environment:
-  - ANDROID_HOME=/usr/lib/android
+  ANDROID_HOME: /usr/lib/android
 
 build:
   gradle:

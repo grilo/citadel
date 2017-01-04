@@ -14,23 +14,24 @@ class Ansible(citadel.nodes.root.Node):
             self.add_error('Parsing error, probably malformed yaml (expected dict).')
             return
 
-        # Unsure if this is python3 compatible
-        # Always display maven's version
+        if not 'deploy' in path:
+            self.add_error('Ansible is only supported within a deploy directive.')
+
+        self.requirements = [
+            'inventory',
+            'playbook',
+        ]
+
+    def to_bash(self):
+        output = []
+
         ansible_exec = citadel.tools.get_executable('ansible-playbook')
+        cmd = ['%s -v -i %s %s' % (ansible_exec, self.yml['inventory'], self.yml['playbook'])]
 
-        if 'deploy' in path:
-            if not 'inventory' in yml.keys():
-                self.add_error('Deploying with ansible requires an "inventory" to be specified.')
-                return
-            if not 'playbook' in yml.keys():
-                self.add_error('Deploying with ansible requires a "playbook" to be specified.')
-                return
+        del self.yml['inventory']
+        del self.yml['playbook']
 
-            cmd = ['%s -v -i %s %s' % (ansible_exec, yml['inventory'], yml['playbook'])]
-
-            for k, v in yml.items():
-                if k == 'inventory' or k == 'playbook':
-                    continue
-                cmd.append('-e %s=%s' % (k, v))
-            self.output.append('echo "Deploying with ansible: %s"' % (yml['playbook']))
-            self.output.append(self.format_cmd(cmd))
+        for k, v in self.yml.items():
+            cmd.append('-e %s=%s' % (k, v))
+        output.append(self.format_cmd(cmd))
+        return output

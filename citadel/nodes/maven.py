@@ -15,65 +15,70 @@ class Maven(citadel.nodes.root.Node):
             self.add_error('Parsing error, probably malformed yaml.')
             return
 
-        # Always display maven's version
-        mvn_exec = citadel.tools.get_executable('mvn') + ' -V -B'
-        logging.debug('Found maven executable: %s', mvn_exec)
-
         if 'build' in path:
-
-            yml = self.set_defaults(yml, {
+            self.defaults = {
                 'pom': 'pom.xml',
                 'lifecycle': 'clean install',
                 'opts': '',
-            })
-
-            validated = self.validate(yml, [
+            }
+            self.requirements = [
                 'pom',
                 'lifecycle',
                 'opts',
-            ])
-
-            for k in validated.keys():
-                del yml[k]
-
-            cmd = ['%s -f "%s" %s %s' % (mvn_exec, validated['pom'], validated['lifecycle'], validated['opts'])]
-            for k, v in yml.items():
-                cmd.append('-D%s=%s' % (k, v))
-            self.output.append(self.format_cmd(cmd))
+            ]
 
         elif 'publish' in path:
-
-            yml = self.set_defaults(yml, {
+            self.defaults = {
                 'opts': '',
                 'version': '${VERSION}',
                 'snapshot': False,
-            })
-
-            validated = self.validate(yml, [
+            }
+            self.requirements = [
                 'file',
                 'artifactId',
                 'groupId',
                 'version',
                 'snapshot',
                 'opts',
-            ])
+            ]
 
-            for k in validated.keys():
-                del yml[k]
+    def to_bash_build(self):
+        mvn_exec = citadel.tools.get_executable('mvn') + ' -V -B'
 
-            if validated['version'] == '${VERSION}':
-                version = citadel.tools.get_version(validated['file'], validated)
-                if not version:
-                    self.add_error('Unable to automatically induce version for: %s' % (validated['file']))
-                self.output.append(version)
+        cmd = ['%s -f "%s" %s %s' % (mvn_exec, self.yml['pom'], self.yml['lifecycle'], self.yml['opts'])]
+        for k in self.requirements:
+            del self.yml[k]
+        for k, v in self.yml.items():
+            cmd.append('-D%s=%s' % (k, v))
+        return self.format_cmd(cmd)
 
-            if validated['snapshot']:
-                validated['version'] += '-SNAPSHOT'
+    def to_bash_publish(self):
+        mvn_exec = citadel.tools.get_executable('mvn') + ' -V -B'
+        version = ''
+        if self.yml['version'] == '${VERSION}':
+            version = citadel.tools.read_jar_version(self.yml['file'], self.yml['groupId'], self.yml['artifactId'])
 
-            cmd = ['%s deploy:deploy-file %s' % (mvn_exec, validated['opts'])]
-            for k, v in validated.items():
-                cmd.append('-D%s="%s"' % (k, v))          
+        if self.yml['snapshot']:
+            self.yml['version'] += '-SNAPSHOT'
 
-            for k, v in yml.items():
-                cmd.append('-D%s="%s"' % (k, v))
-            self.output.append(self.format_cmd(cmd))
+        cmd = ['%s deploy:deploy-file %s' % (mvn_exec, self.yml['opts'])]
+
+        for k in self.requirements:
+            del self.yml[k]
+        for k, v in self.yml.items():
+            cmd.append('-D%s="%s"' % (k, v))
+
+        for k, v in self.yml.items():
+            cmd.append('-D%s="%s"' % (k, v))
+        return "\n".join([
+            version,
+            self.format_cmd(cmd)
+        ])
+
+    def to_bash(self):
+        output = []
+        if 'build' in self.path:
+            output.append(self.to_bash_build())
+        elif 'publish' in self.path:
+            output.append(self.to_bash_publish())
+        return output
