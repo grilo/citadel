@@ -13,32 +13,28 @@ class Gradle(citadel.nodes.root.Node):
 
         if not isinstance(yml, dict):
             self.add_error('Parsing error, probably malformed yaml.')
+            return
 
-        if not 'build' in path:
-            self.add_error('Gradle currently only supports building.')
-
-        self.defaults = {
-            'lifecycle': 'clean assemble',
-        }
-
-    def to_bash(self):
-        output = []
-
+        # Unsure if this is python3 compatible
+        # Always display maven's version
         gradle_exec = citadel.tools.get_executable('gradle')
         if not gradle_exec:
             logging.debug('Unable to find gradle in $PATH, using default wrapper.')
             gradle_exec = './gradlew'
 
-        output.append('%s --version' % (gradle_exec))
+        if 'build' in path:
 
-        cmd = ['%s' % (gradle_exec)]
-        cmd.append(self.yml['lifecycle'])
+            self.output.append('%s --version' % (gradle_exec))
 
-        del self.yml['lifecycle']
+            cmd = ['%s' % (gradle_exec)]
+            lifecycle = 'clean assemble'
+            if 'lifecycle' in yml.keys():
+                lifecycle = yml['lifecycle']
+                del yml['lifecycle']
 
-        for k, v in self.yml.items():
-            cmd.append('-D%s="%s"' % (k, v))
-        output.append('echo "Building..."')
-        output.append(self.format_cmd(cmd))
+            cmd.append(lifecycle)
 
-        return output
+            for k, v in yml.items():
+                cmd.append('-D%s="%s"' % (k, v))
+            self.output.append('echo "Building..."')
+            self.output.append(self.format_cmd(cmd))

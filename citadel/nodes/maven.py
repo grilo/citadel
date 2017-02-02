@@ -4,6 +4,7 @@ import logging
 
 import citadel.nodes.root
 import citadel.tools
+import citadel.parser
 
 
 class Maven(citadel.nodes.root.Node):
@@ -15,70 +16,76 @@ class Maven(citadel.nodes.root.Node):
             self.add_error('Parsing error, probably malformed yaml.')
             return
 
+        # Always display maven's version
+        mvn_exec = citadel.tools.get_executable('mvn') + ' -V -B'
+        logging.debug('Found maven executable: %s', mvn_exec)
+        parser = citadel.parser.Options(self.yml)
+
         if 'build' in path:
-            self.defaults = {
-                'pom': 'pom.xml',
-                'lifecycle': 'clean install',
-                'opts': '',
-            }
-            self.requirements = [
-                'pom',
-                'lifecycle',
-                'opts',
-            ]
+
+            parser.add_default('pom', 'pom.xml')
+            parser.add_default('lifecycle', 'clean install')
+            parser.add_default('opts', '')
+            errors, parsed, ignored = parser.validate()
+
+            cmd = ['%s -f "%s" %s %s' % (mvn_exec, parsed['pom'], parsed['lifecycle'], parsed['opts'])]
+            for k, v in ignored.items():
+                cmd.append('-D%s=%s' % (k, v))
+            self.output.append(self.format_cmd(cmd))
 
         elif 'publish' in path:
-            self.defaults = {
-                'opts': '',
-                'version': '${VERSION}',
-                'snapshot': False,
-            }
-            self.requirements = [
-                'file',
-                'artifactId',
-                'groupId',
-                'version',
-                'snapshot',
-                'opts',
-            ]
 
-    def to_bash_build(self):
-        mvn_exec = citadel.tools.get_executable('mvn') + ' -V -B'
+            parser.add_default('opts', '')
+            parser.add_default('version', '${VERSION}')
+            parser.add_default('snapshot', False)
 
-        cmd = ['%s -f "%s" %s %s' % (mvn_exec, self.yml['pom'], self.yml['lifecycle'], self.yml['opts'])]
-        for k in self.requirements:
-            del self.yml[k]
-        for k, v in self.yml.items():
-            cmd.append('-D%s=%s' % (k, v))
-        return self.format_cmd(cmd)
+            parser.is_required('file')
+            parser.is_required('artifactId')
+            parser.is_required('groupId')
 
-    def to_bash_publish(self):
-        mvn_exec = citadel.tools.get_executable('mvn') + ' -V -B'
-        version = ''
-        if self.yml['version'] == '${VERSION}':
-            version = citadel.tools.read_jar_version(self.yml['file'], self.yml['groupId'], self.yml['artifactId'])
+            errors, parsed, ignored = parser.validate()
+            self.errors.extend(errors)
 
-        if self.yml['snapshot']:
-            self.yml['version'] += '-SNAPSHOT'
+            if parsed['file'] and parsed['version'] == '${VERSION}':
 
-        cmd = ['%s deploy:deploy-file %s' % (mvn_exec, self.yml['opts'])]
+                file = parsed['file']
+                version = ''
 
-        for k in self.requirements:
-            del self.yml[k]
-        for k, v in self.yml.items():
-            cmd.append('-D%s="%s"' % (k, v))
+                if file.endswith('.apk'):
+                    version = self.read_apk_version(file)
+                elif file.endswith('.jar') or file.endswith('.war') or file.endswith('.ear'):
+                    version = self.read_jar_version(file, parsed['groupId'], parsed['artifactId'])
+                elif file.endswith('.ipa'):
+                    version = self.read_ipa_version(file)
+                else:
+                    self.add_error('Unable to automatically induce version for: %s' % (parsed['file']))
 
-        for k, v in self.yml.items():
-            cmd.append('-D%s="%s"' % (k, v))
-        return "\n".join([
-            version,
-            self.format_cmd(cmd)
-        ])
+                self.output.append(version)
 
-    def to_bash(self):
-        output = []
-        if 'build' in self.path:
-            output.append(self.to_bash_build())
-        elif 'publish' in self.path:
-            output.append(self.to_bash_publish())
-        return output
+            self.output.append(citadel.tools.find_file(parsed['file']))
+            parsed['file'] = "$FILE"
+
+            if parsed['snapshot'] and not '-SNAPSHOT' in parsed['version']:
+                parsed['version'] += '-SNAPSHOT'
+
+            cmd = ['%s deploy:deploy-file %s' % (mvn_exec, parsed['opts'])]
+            for k, v in parsed.items():
+                cmd.append('-D%s="%s"' % (k, v))
+
+            for k, v in ignored.items():
+                cmd.append('-D%s="%s"' % (k, v))
+            self.output.append(self.format_cmd(cmd))
+
+    def read_apk_version(self, file):
+        #cmd = 'AAPT_TOOL="$ANDROID_HOME/build-tools/$(ls -rt $ANDROID_HOME/build-tools | tail -1)/aapt"\n'
+        cmd = 'AAPT_TOOL="$ANDROID_HOME/build-tools/23.0.3/aapt"\n'
+        cmd += 'VERSION=$($AAPT_TOOL d badging "%s" | grep versionName | awk -F\\\' \'{print $4"-"$6}\')' % (file)
+        return cmd
+
+    def read_jar_version(self, file, group_id, artifact_id):
+        return "VERSION=$(unzip -p '%s' '*%s*/*%s*/pom.properties' | grep version | awk -F= '{print $2}')" % (file, group_id, artifact_id)
+
+    def read_ipa_version(self, file):
+        return """VERSION=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties::CFBundleVersion" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")
+    VERSION=$VERSION-$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")"""
+

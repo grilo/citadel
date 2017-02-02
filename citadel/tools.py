@@ -14,41 +14,6 @@ import logging
 
 import citadel.yaml
 
-def get_version(file, properties):
-    version = None
-    if file.endswith('.apk'):
-        version = read_apk_version(file)
-    elif file.endswith('.jar') or file.endswith('.war') or file.endswith('.ear'):
-        return read_jar_version(file, properties['groupId'], properties['artifactId'])
-    elif file.endswith('.ipa'):
-        return read_ipa_version(file)
-    else:
-        logging.critical('Unknown file extension which prevents me from finding its version: %s', file)
-    return version
-
-def read_apk_version(file):
-    cmd = 'AAPT_TOOL="$ANDROID_HOME/build-tools/$(ls -rt $ANDROID_HOME/build-tools | tail -1)/aapt"\n'
-    cmd += 'VERSION=$($AAPT_TOOL d badging "%s" | grep versionName | awk -F\\\' \'{print $4"-"$6}\')' % (file)
-    return cmd
-
-def read_jar_version(file, group_id, artifact_id):
-    return "VERSION=$(unzip -p '%s' '*%s*/*%s*/pom.properties' | grep version | awk -F= '{print $2}')" % (file, group_id, artifact_id)
-
-def read_ipa_version(file):
-    return """VERSION=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties::CFBundleVersion" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")
-VERSION=$VERSION-$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")"""
-
-def get_alternatives(binary):
-    try:
-        rc, out = run_cmd('update-alternatives --list %s' % (binary))
-    except OSError:
-        rc, out = run_cmd('/usr/sbin/update-alternatives --display %s' % (binary))
-        outlines = []
-        for line in out.splitlines():
-            if line.startswith('/'):
-                outlines.append(re.sub(r' - .*', '', line))
-        out = "\n".join(outlines)
-    return out.splitlines()
 
 def run_cmd(cmd):
     p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
@@ -78,31 +43,6 @@ def get_branch_name(directory):
     os.chdir(old_dir)
     return branch_name
 
-def unlock_keychain(keychain, password):
-    return '\n'.join([
-        'echo "Unlocking keychain for code signing."',
-        '/usr/bin/security list-keychains -s "%s"' % (keychain),
-        '/usr/bin/security default-keychain -d user -s "%s"' % (keychain),
-        '/usr/bin/security unlock-keychain -p "%s" "%s"' % (password, keychain),
-        '/usr/bin/security set-keychain-settings -t 7200 "%s"' % (keychain),
-    ])
-
-def codesign_verify(ipafile):
-    return '\n'.join([
-        'unzip -oq -d "verifycodesign" "%s"' % (ipafile),
-        'unpacked_app="$(ls verifycodesign/Payload/)"',
-        'cd verifycodesign/Payload',
-        'if ! codesign --verify --verbose=4 "$unpacked_app" --no-strict ; then',
-        '    codesign -d -r -vvvvv "$unpacked_app"',
-        '    echo "The application is not signed correctly."',
-        '    echo "This may mean out of date certificate chains, probably hidden."',
-        '    rm -fr "verifycodesign"',
-        '    exit 1',
-        'fi',
-        'cd -',
-        'rm -fr "verifycodesign"',
-    ])
-
 def ordered_load(stream, Loader=citadel.yaml.Loader, object_pairs_hook=collections.OrderedDict):
     class OrderedLoader(Loader):
         pass
@@ -113,23 +53,6 @@ def ordered_load(stream, Loader=citadel.yaml.Loader, object_pairs_hook=collectio
         citadel.yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
         construct_mapping)
     return citadel.yaml.load(stream, OrderedLoader)
-
-def get_provisioning_profile(app_id, keychain):
-    cmd = 'osx_pprofile -k %s' % (keychain)
-    if app_id:
-        cmd += ' -a %s' % (app_id)
-
-    return '\n'.join([
-        'cmd="%s"' % (cmd),
-        'if [[ $ENVIRONMENT =~  PRO ]] ; then',
-        '    cmd="$cmd --production"',
-        'fi',
-        'output=$($cmd)',
-        'UUID=$(echo "$output" | head -1 | awk -F@ \'{print $1}\')',
-        'PP_NAME=$(echo "$output" | head -1 | awk -F@ \'{print $2}\')',
-        'CODE_SIGN_IDENTITY=$(echo "$output" | head -1 | awk -F@ \'{print $3}\')',
-        'TEAM_ID=$(echo "$output" | head -1 | awk -F@ \'{print $4}\')',
-    ])
 
 def filter_secrets(lines):
     filtered = []
@@ -143,3 +66,24 @@ def filter_secrets(lines):
         else:
             filtered.append(line)
     return filtered
+
+def find_file(wildcard):
+    dirname = os.path.dirname(wildcard)
+    if not dirname:
+        dirname = '.'
+    filename = os.path.basename(wildcard)
+    return '\n'.join([
+        'FILE=$(find %s -type f -name "%s")' % (dirname, filename),
+        'if [ $(echo "$FILE"  | wc -l) -gt 1 ] ; then',
+        '    echo "Too many results found while looking for %s. Aborting..." && exit 1' % (wildcard),
+        'fi',
+    ])
+
+def bash_syntax(string):
+    if not string:
+        return False
+    try:
+        subprocess.check_call("echo '%s' | bash -n" % (string), shell=True)
+        return True
+    except:
+        return False
