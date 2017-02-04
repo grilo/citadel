@@ -11,11 +11,11 @@ class Npm(citadel.nodes.root.Node):
     def __init__(self, yml, path):
         super(Npm, self).__init__(yml, path)
 
-        npm_exec = citadel.tools.get_executable('npm')
-        self.output.append('npm --version')
+        npm_exec = citadel.tools.find_executable('npm')
+        self.output.append('%s --version' % (npm_exec))
 
         if 'build' in path:
-            self.output.append(npm_exec + ' ' + yml)
+            self.output.append(npm_exec + ' ' + str(yml))
 
         elif 'publish' in path:
             registry = 'https://registry.npmjs.org'

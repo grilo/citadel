@@ -20,9 +20,8 @@ def run_cmd(cmd):
     stdout, stderr = p.communicate()
     return p.returncode, stdout
 
-def get_executable(executable):
-    # Not sure if this is python3 compatible
-    return distutils.spawn.find_executable(executable)
+def find_executable(executable):
+    return '"$(which %s)"' % (executable)
 
 def get_branch_name(directory):
     branch_name = None
@@ -67,6 +66,17 @@ def filter_secrets(lines):
             filtered.append(line)
     return filtered
 
+def find_downloader():
+    return """
+DOWNLOADER=""
+if which curl ; then
+    DOWNLOADER="$(which curl) -O -s"
+elif which wget ; then
+    DOWNLOADER="$(which wget) -q"
+else
+    echo "Unable to find any downloader software. Aborting..." && exit 1
+fi"""
+
 def find_file(wildcard):
     dirname = os.path.dirname(wildcard)
     if not dirname:
@@ -86,4 +96,5 @@ def bash_syntax(string):
         subprocess.check_call("echo '%s' | bash -n" % (string), shell=True)
         return True
     except:
+        logging.debug(string)
         return False

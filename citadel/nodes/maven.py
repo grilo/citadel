@@ -12,13 +12,8 @@ class Maven(citadel.nodes.root.Node):
     def __init__(self, yml, path):
         super(Maven, self).__init__(yml, path)
 
-        if not isinstance(yml, dict):
-            self.add_error('Parsing error, probably malformed yaml.')
-            return
-
         # Always display maven's version
-        mvn_exec = citadel.tools.get_executable('mvn') + ' -V -B'
-        logging.debug('Found maven executable: %s', mvn_exec)
+        mvn_exec = citadel.tools.find_executable('mvn') + ' -V -B'
         parser = citadel.parser.Options(self.yml)
 
         if 'build' in path:

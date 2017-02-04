@@ -12,10 +12,6 @@ class Rbenv(citadel.nodes.root.Node):
     def __init__(self, yml, path):
         super(Rbenv, self).__init__(yml, path)
 
-        if not isinstance(yml, dict):
-            self.add_error('Parsing error, probably malformed yaml.')
-            return
-
         if 'ruby' in self.yml.keys():
             logging.info('Detected ruby version request: %s', self.yml['ruby'])
             out = self.rbenv(self.yml['ruby'])

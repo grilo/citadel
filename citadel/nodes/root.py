@@ -93,55 +93,9 @@ class Node(object):
 
     def to_bash(self):
         for child in self.children:
-            self.output.extend(child.to_bash())
+            for value in child.to_bash():
+                if not value:
+                    logging.error('Module %s isn\'t generating any output.' % (child.__class__.__name__))
+                    continue
+                self.output.append(value)
         return self.output
-
-    def validate(self, dictionary, fields):
-        # fields (list of):
-        #   'mandatory'
-        #   ['at', 'least', 'one, 'of']
-        #   ( 'either', 'or')
-        # { 'all': '', 'or': '', 'nothing': '' }
-
-        validated = {}
-
-        for required in fields:
-            if isinstance(required, str):
-                if not required in dictionary.keys():
-                    self.add_error('The following field is required: %s' % (required))
-                else:
-                    validated[required] = dictionary[required]
-
-            elif isinstance(required, list):
-                found = [k for k in dictionary.keys() if k in required]
-                if not found:
-                    self.add_error('At least one of the following values is required: %s' % (",".join(required)))
-                else:
-                    for f in found:
-                        validated[f] = dictionary[f]
-
-            elif isinstance(required, tuple):
-                found = [k for k in dictionary.keys() if k in required]
-                if len(found) >  1:
-                    self.add_error('At most one of the following values is required: %s' % (",".join(required)))
-                elif len(found) <  1:
-                    self.add_error('At least one of the following values is required: %s' % (",".join(required)))
-                else:
-                    for f in found:
-                        validated[f] = dictionary[f]
-
-            elif isinstance(required, dict):
-                found = [k for k in dictionary.keys() if k in required.keys()]
-                if len(found) > 0 and len(found) != len(required.keys()):
-                    self.add_error('All of the following items must be specified together: %s' % (",".join(required.keys())))
-                else:
-                    for f in found:
-                        validated[f] = dictionary[f]
-
-        return validated
-
-    def set_defaults(self, yml, default_values):
-        for k, v in default_values.items():
-            if not k in yml:
-                yml[k] = v
-        return yml

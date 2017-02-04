@@ -10,6 +10,7 @@ class Options:
         self.required = []
         self.at_least = []
         self.at_most = []
+        self.one_and_all = []
         self.accounted = []
 
     def add_default(self, key, value):
@@ -25,9 +26,16 @@ class Options:
     def at_most_one(self, opts):
         self.at_most.append(opts)
 
+    def if_one_then_all(self, opts):
+        self.one_and_all.append(opts)
+
     def validate(self):
         errors = []
         ignored = {}
+
+        if not isinstance(self.yml, dict):
+            errors.append('Expected a python dict, probably malformed YML syntax.')
+            return errors, {}, {}
 
         for req in self.required:
             self.accounted.append(req)
@@ -51,6 +59,15 @@ class Options:
                     found += 1
             if found > 1:
                 errors.append('At most one of the following values may be specified: %s' % (' '.join(group)))
+
+        for group in self.one_and_all:
+            self.accounted.extend(group)
+            found = 0
+            for value in group:
+                if value in self.yml:
+                    found += 1
+            if found > 0 and found != len(value):
+                errors.append('The following values must be specified together: %s' % (' '.join(group)))
 
         for k, v in self.yml.items():
             if not k in self.accounted:

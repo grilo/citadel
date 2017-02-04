@@ -27,7 +27,7 @@ class Language(citadel.nodes.root.Node):
             self.output.append('export JAVA_HOME="%s"' % (java_home))
         elif 'npm' in lang:
             wanted_version = re.match(r'npm([0-9\.]+)', lang).group(1)
-            npm = citadel.tools.get_executable('npm')
+            npm = citadel.tools.find_executable('npm')
             rc, out = citadel.tools.run_cmd(npm + ' --version')
             existing_version = out.strip()
             if not re.match(wanted_version, existing_version):

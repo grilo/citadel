@@ -16,21 +16,24 @@ class Ansible(citadel.nodes.root.Node):
 
         # Unsure if this is python3 compatible
         # Always display maven's version
-        ansible_exec = citadel.tools.get_executable('ansible-playbook')
+        ansible_exec = citadel.tools.find_executable('ansible-playbook')
+        parser = citadel.parser.Options(self.yml)
 
         if 'deploy' in path:
-            if not 'inventory' in yml.keys():
-                self.add_error('Deploying with ansible requires an "inventory" to be specified.')
-                return
-            if not 'playbook' in yml.keys():
-                self.add_error('Deploying with ansible requires a "playbook" to be specified.')
+            parser.is_required('inventory')
+            parser.is_required('playbook')
+
+            errors, parsed, ignored = parser.validate()
+
+            if len(errors):
+                self.errors.extend(errors)
                 return
 
-            cmd = ['%s -v -i %s %s' % (ansible_exec, yml['inventory'], yml['playbook'])]
+            cmd = ['%s -v -i %s %s' % (ansible_exec, parsed['inventory'], parsed['playbook'])]
 
-            for k, v in yml.items():
+            for k, v in ignored.items():
                 if k == 'inventory' or k == 'playbook':
                     continue
                 cmd.append('-e %s=%s' % (k, v))
-            self.output.append('echo "Deploying with ansible: %s"' % (yml['playbook']))
+            self.output.append('echo "Deploying with ansible: %s"' % (parsed['playbook']))
             self.output.append(self.format_cmd(cmd))

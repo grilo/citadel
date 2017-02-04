@@ -12,111 +12,97 @@ class Xcode(citadel.nodes.root.Node):
     def __init__(self, yml, path):
         super(Xcode, self).__init__(yml, path)
 
-        if not isinstance(yml, dict):
-            self.add_error('Parsing error, probably malformed yaml.')
+        xcode_exec = citadel.tools.find_executable('xcodebuild')
+        parser = citadel.parser.Options(self.yml)
+
+        if not 'build' in path:
             return
 
-        xcode_exec = citadel.tools.get_executable('xcodebuild')
-        if not xcode_exec:
-            self.add_error('Unable to find Xcode executable.')
+        parser.add_default('app_id', None)
+        parser.add_default('lifecycle', 'clean archive')
+        parser.add_default('OTHER_CODE_SIGN_FLAGS', '')
+        parser.add_default('CONFIGURATION_BUILD_DIR', 'build')
+        parser.add_default('CODE_SIGN_IDENTITY', '$CODE_SIGN_IDENTITY')
+        parser.add_default('DEVELOPMENT_TEAM', '$TEAM_ID')
+        parser.add_default('PROVISIONING_PROFILE_SPECIFIER', '$TEAM_ID/$UUID')
 
-        if 'build' in path:
+        parser.is_required('scheme')
+        parser.is_required('archivePath')
+        parser.is_required('configuration')
+        parser.at_most_one(['workspace', 'project'])
+        parser.if_one_then_all(['keychain', 'keychain_password'])
 
-            self.set_defaults(yml, {
-                'app_id': None,
-                'lifecycle': 'clean archive',
-                'OTHER_CODE_SIGN_FLAGS': '',
-                'CONFIGURATION_BUILD_DIR': 'build',
-                'CODE_SIGN_IDENTITY': '$CODE_SIGN_IDENTITY',
-                'DEVELOPMENT_TEAM': '$TEAM_ID',
-                'PROVISIONING_PROFILE_SPECIFIER': '$TEAM_ID/$UUID',
-            })
+        errors, parsed, ignored = parser.validate()
+        self.errors.extend(errors)
+        if len(errors):
+            return
 
-            # Extrac the required values
-            validated = self.validate(yml, [
-                'scheme',
-                'app_id',
-                'archivePath',
-                'configuration',
-                'lifecycle',
-                'OTHER_CODE_SIGN_FLAGS',
-                'CONFIGURATION_BUILD_DIR',
-                'CODE_SIGN_IDENTITY',
-                'DEVELOPMENT_TEAM',
-                'PROVISIONING_PROFILE_SPECIFIER',
-                ('workspace', 'project'),
-                {'keychain': '', 'keychain_password': ''},
-                ])
+        # Check for absolute paths
+        if not parsed['CONFIGURATION_BUILD_DIR'].startswith('/') and \
+            not parsed['CONFIGURATION_BUILD_DIR'].startswith('$'):
+            parsed['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), parsed['CONFIGURATION_BUILD_DIR'])
 
-            for k in validated.keys():
-                del yml[k]
+        # Set exportPath if it doesn't exist already
+        if 'exportPath' in yml.keys():
+            parsed['exportPath'] = yml['exportPath']
+        else:
+            parsed['exportPath'] = os.path.join(os.path.dirname(parsed['archivePath']), parsed['scheme'] + '.ipa')
+            logging.debug('Setting exportPath to: %s', parsed['exportPath'])
 
-            if not validated['CONFIGURATION_BUILD_DIR'].startswith('/') and not validated['CONFIGURATION_BUILD_DIR'].startswith('$'):
-                validated['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), validated['CONFIGURATION_BUILD_DIR'])
-            if 'exportPath' in yml.keys():
-                validated['exportPath'] = yml['exportPath']
-            else:
-                validated['exportPath'] = os.path.join(os.path.dirname(validated['archivePath']), validated['scheme'] + '.ipa')
-                logging.debug('Setting exportPath to: %s', validated['exportPath'])
+        self.output.append('echo "Xcodebuild version: $(xcodebuild -version)"')
+        self.output.append('echo "Bundle version: $(/usr/bin/agvtool mvers -terse1)"')
 
-            self.output.append('echo "Xcodebuild version: $(xcodebuild -version)"')
-            self.output.append('echo "Bundle version: $(/usr/bin/agvtool mvers -terse1)"')
+        # ibtoold may timeout if CoreSimulator has weird stuff
+        self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/CoreSimulator"/*')
+        # Builds fail very often due to incorrect caching policies from Xcode (stored in DerivedData)
+        self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/Xcode/DerivedData"/*')
 
+        cmd = ['%s' % (xcode_exec)]
 
-            # ibtoold may timeout if CoreSimulator has weird stuff
-            self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/CoreSimulator"/*')
-            # Builds fail very often due to incorrect caching policies from Xcode (stored in DerivedData)
-            self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/Xcode/DerivedData"/*')
+        lifecycle = parsed['lifecycle']
+        scheme = parsed['scheme']
+        if not parsed['archivePath'].startswith('/') and not parsed['archivePath'].startswith('$'):
+            parsed['archivePath'] = os.path.join(os.getcwd(), parsed['archivePath'])
 
-            cmd = ['%s' % (xcode_exec)]
+        cmd.append(' %s' % (lifecycle))
+        cmd.append('-scheme "%s"' % (parsed['scheme']))
+        cmd.append('-archivePath "%s"' % (parsed['archivePath']))
+        cmd.append('-configuration "%s"' % (parsed['configuration']))
 
-            lifecycle = validated['lifecycle']
-            scheme = validated['scheme']
-            archive_path = validated['archivePath']
-            if not validated['archivePath'].startswith('/') and not validated['archivePath'].startswith('$'):
-                archive_path = os.path.join(os.getcwd(), validated['archivePath'])
+        if 'workspace' in parsed.keys():
+            cmd.append('-workspace "%s"' % (parsed['workspace']))
+        elif 'project' in parsed.keys():
+            cmd.append('-project "%s"' % (parsed['project']))
 
-            cmd.append(' %s' % (lifecycle))
-            cmd.append('-scheme "%s"' % (validated['scheme']))
-            cmd.append('-archivePath "%s"' % (validated['archivePath']))
-            cmd.append('-configuration "%s"' % (validated['configuration']))
+        if 'target' in ignored.keys():
+            cmd.append('-target "%s"' % (ignored['target']))
+            del ignored['target']
 
-            if 'workspace' in validated.keys():
-                cmd.append('-workspace "%s"' % (validated['workspace']))
-            elif 'project' in validated.keys():
-                cmd.append('-project "%s"' % (validated['project']))
+        if 'keychain' in parsed.keys():
+            parsed['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (parsed['keychain'])
+            self.output.append(self.unlock_keychain(parsed['keychain'], parsed['keychain_password']))
+            self.output.append(self.get_provisioning_profile(parsed['app_id'], parsed['keychain']))
+        else:
+            logging.warning('No "keychain" found, assuming it\'s already prepared.')
 
-            if 'target' in yml.keys():
-                cmd.append('-target "%s"' % (yml['target']))
-                del yml['target']
+        cmd.append('CODE_SIGN_IDENTITY="%s"' % (parsed['CODE_SIGN_IDENTITY']))
+        cmd.append('DEVELOPMENT_TEAM="%s"' % (parsed['DEVELOPMENT_TEAM']))
+        cmd.append('PROVISIONING_PROFILE_SPECIFIER="%s"' % (parsed['PROVISIONING_PROFILE_SPECIFIER']))
 
-            if 'keychain' in validated.keys():
-                validated['OTHER_CODE_SIGN_FLAGS'] = validated['OTHER_CODE_SIGN_FLAGS']
-                validated['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (validated['keychain'])
-                self.output.append(self.unlock_keychain(validated['keychain'], validated['keychain_password']))
-                self.output.append(self.get_provisioning_profile(validated['app_id'], validated['keychain']))
-            else:
-                logging.warning('No "keychain" found, assuming it\'s already prepared.')
+        for k, v in ignored.items():
+            cmd.append('%s="%s"' % (k, v))
+        self.output.append('echo "Building..."')
+        self.output.append(self.format_cmd(cmd))
 
-            cmd.append('CODE_SIGN_IDENTITY="$CODE_SIGN_IDENTITY"')
-            cmd.append('DEVELOPMENT_TEAM="$TEAM_ID"')
-            cmd.append('PROVISIONING_PROFILE_SPECIFIER="$TEAM_ID/$UUID"')
-
-
-            for k, v in yml.items():
-                cmd.append('%s="%s"' % (k, v))
-            self.output.append('echo "Building..."')
-            self.output.append(self.format_cmd(cmd))
-
-            self.output.append('echo "Generating IPA file..."')
-            export_cmd = ['%s' % (xcode_exec)]
-            export_cmd.append('-exportArchive')
-            export_cmd.append('-exportFormat ipa')
-            export_cmd.append('-exportProvisioningProfile "$PP_NAME"')
-            export_cmd.append('-archivePath "%s"' % (archive_path))
-            export_cmd.append('-exportPath "%s"' % (validated['exportPath']))
-            self.output.append(self.format_cmd(export_cmd))
-            self.output.append(self.codesign_verify(validated['exportPath']))
+        self.output.append('echo "Generating IPA file..."')
+        export_cmd = ['%s' % (xcode_exec)]
+        export_cmd.append('-exportArchive')
+        export_cmd.append('-exportFormat ipa')
+        export_cmd.append('-exportProvisioningProfile "$PP_NAME"')
+        export_cmd.append('-archivePath "%s"' % (parsed['archivePath']))
+        export_cmd.append('-exportPath "%s"' % (parsed['exportPath']))
+        self.output.append(self.format_cmd(export_cmd))
+        self.output.append(self.codesign_verify(parsed['exportPath']))
 
     def get_provisioning_profile(self, app_id, keychain):
         cmd = 'python /home/jenkins/CLI/utils/osx_pprofile.py -k %s' % (keychain)

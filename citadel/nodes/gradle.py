@@ -15,26 +15,28 @@ class Gradle(citadel.nodes.root.Node):
             self.add_error('Parsing error, probably malformed yaml.')
             return
 
-        # Unsure if this is python3 compatible
-        # Always display maven's version
-        gradle_exec = citadel.tools.get_executable('gradle')
-        if not gradle_exec:
-            logging.debug('Unable to find gradle in $PATH, using default wrapper.')
-            gradle_exec = './gradlew'
+        gradle_exec = self.get_gradle()
+        parser = citadel.parser.Options(self.yml)
 
         if 'build' in path:
 
-            self.output.append('%s --version' % (gradle_exec))
+            parser.add_default('lifecycle', 'clean assemble')
+
+            errors, parsed, ignored = parser.validate()
 
             cmd = ['%s' % (gradle_exec)]
-            lifecycle = 'clean assemble'
-            if 'lifecycle' in yml.keys():
-                lifecycle = yml['lifecycle']
-                del yml['lifecycle']
+            cmd.append(parsed['lifecycle'])
 
-            cmd.append(lifecycle)
-
-            for k, v in yml.items():
+            for k, v in ignored.items():
                 cmd.append('-D%s="%s"' % (k, v))
-            self.output.append('echo "Building..."')
             self.output.append(self.format_cmd(cmd))
+
+    def get_gradle(self):
+        self.output.append("""GRADLE="$(which gradle)"
+if [ -z "${GRADLE}" ] ; then
+    echo "Unable to find gradle in $PATH, using default wrapper."
+    GRADLE="./gradlew"
+fi
+$GRADLE --version
+""")
+        return "$GRADLE"
