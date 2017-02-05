@@ -23,7 +23,7 @@ It also supports environment variables injection:
 And since you may want to selectively run specific steps, it supports
 conditional execution:
 ```
-# Generate only the deploy and test stages
+# Do NOT generate the shell for deploy and test stages
 ./citadel-generate -i deploy,test
 ```
 
