@@ -12,6 +12,7 @@ import citadel.nodes.root
 
 
 def load(yml_file, environment, ignore):
+    """Load the YML file."""
 
 
     with open(yml_file) as fd:
