@@ -2,43 +2,41 @@
 
 import logging
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
-import citadel.parser
 
 
-class Maven(citadel.nodes.root.Node):
+class Maven(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Maven, self).__init__(yml, path)
 
         # Always display maven's version
         mvn_exec = citadel.tools.find_executable('mvn') + ' -V -B'
-        parser = citadel.parser.Options(self.yml)
 
         if 'build' in path:
 
-            parser.add_default('pom', 'pom.xml')
-            parser.add_default('lifecycle', 'clean install')
-            parser.add_default('opts', '')
-            errors, parsed, ignored = parser.validate()
+            self.parser.add_default('pom', 'pom.xml')
+            self.parser.add_default('lifecycle', 'clean install')
+            self.parser.add_default('opts', '')
+            errors, parsed, ignored = self.parser.validate()
 
             cmd = ['%s -f "%s" %s %s' % (mvn_exec, parsed['pom'], parsed['lifecycle'], parsed['opts'])]
             for k, v in ignored.items():
                 cmd.append('-D%s=%s' % (k, v))
-            self.output.append(self.format_cmd(cmd))
+            self.output.append(citadel.tools.format_cmd(cmd))
 
         elif 'publish' in path:
 
-            parser.add_default('opts', '')
-            parser.add_default('version', '${VERSION}')
-            parser.add_default('snapshot', False)
+            self.parser.add_default('opts', '')
+            self.parser.add_default('version', '${VERSION}')
+            self.parser.add_default('snapshot', False)
 
-            parser.is_required('file')
-            parser.is_required('artifactId')
-            parser.is_required('groupId')
+            self.parser.is_required('file')
+            self.parser.is_required('artifactId')
+            self.parser.is_required('groupId')
 
-            errors, parsed, ignored = parser.validate()
+            errors, parsed, ignored = self.parser.validate()
             self.errors.extend(errors)
 
             if parsed['file'] and parsed['version'] == '${VERSION}':
@@ -69,7 +67,7 @@ class Maven(citadel.nodes.root.Node):
 
             for k, v in ignored.items():
                 cmd.append('-D%s="%s"' % (k, v))
-            self.output.append(self.format_cmd(cmd))
+            self.output.append(citadel.tools.format_cmd(cmd))
 
     def read_apk_version(self, file):
         #cmd = 'AAPT_TOOL="$ANDROID_HOME/build-tools/$(ls -rt $ANDROID_HOME/build-tools | tail -1)/aapt"\n'

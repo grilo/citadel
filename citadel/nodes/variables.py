@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import citadel.nodes.root
+import citadel.nodes.node
 
 
-class Variables(citadel.nodes.root.Node):
+class Variables(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Variables, self).__init__(yml, path)

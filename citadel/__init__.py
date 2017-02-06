@@ -8,7 +8,7 @@ import os
 
 import citadel.yaml
 import citadel.tools
-import citadel.nodes.root
+import citadel.tree
 
 
 def load(yml_file, environment, ignore):
@@ -21,8 +21,11 @@ def load(yml_file, environment, ignore):
 
         ordered_yml = citadel.tools.ordered_load(fd, citadel.yaml.SafeLoader)
 
-        builder = citadel.nodes.root.Node(ordered_yml, [], environment, ignore)
-        errors = builder.get_errors()
+        b = citadel.tree.Builder(ignore)
+        root_node = b.build(ordered_yml, environment)
+
+        w = citadel.tree.Walker()
+        errors = w.get_errors(root_node)
 
         if len(errors) > 0:
             logging.critical("Found (%d) errors while parsing: %s" % (len(errors), yml_file))
@@ -31,7 +34,7 @@ def load(yml_file, environment, ignore):
             os.chdir(old_cwd)
             return False
 
-        output = builder.to_bash()
+        output = w.get_output(root_node)
         logging.debug('Generated script:\n%s' % ('\n'.join(citadel.tools.filter_secrets(output))))
 
         os.chdir(old_cwd)

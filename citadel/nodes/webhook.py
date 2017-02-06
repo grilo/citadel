@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Webhook(citadel.nodes.root.Node):
+class Webhook(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Webhook, self).__init__(yml, path)

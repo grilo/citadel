@@ -2,11 +2,11 @@
 
 import logging
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Nodejs(citadel.nodes.root.Node):
+class Nodejs(citadel.nodes.node.Base):
     """
 
         nodejs:

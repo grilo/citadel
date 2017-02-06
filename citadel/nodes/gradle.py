@@ -2,11 +2,11 @@
 
 import logging
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Gradle(citadel.nodes.root.Node):
+class Gradle(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Gradle, self).__init__(yml, path)
@@ -16,20 +16,19 @@ class Gradle(citadel.nodes.root.Node):
             return
 
         gradle_exec = self.get_gradle()
-        parser = citadel.parser.Options(self.yml)
 
         if 'build' in path:
 
-            parser.add_default('lifecycle', 'clean assemble')
+            self.parser.add_default('lifecycle', 'clean assemble')
 
-            errors, parsed, ignored = parser.validate()
+            errors, parsed, ignored = self.parser.validate()
 
             cmd = ['%s' % (gradle_exec)]
             cmd.append(parsed['lifecycle'])
 
             for k, v in ignored.items():
                 cmd.append('-D%s="%s"' % (k, v))
-            self.output.append(self.format_cmd(cmd))
+            self.output.append(citadel.tools.format_cmd(cmd))
 
     def get_gradle(self):
         self.output.append("""GRADLE="$(which gradle)"

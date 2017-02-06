@@ -3,11 +3,11 @@
 import logging
 import re
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Branch(citadel.nodes.root.Node):
+class Branch(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         """Conditional execution based on branch name (regex match)."""

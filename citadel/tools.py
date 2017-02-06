@@ -6,10 +6,9 @@ import os
 import subprocess
 import shlex
 import distutils.spawn
-import plistlib
 import collections
 import re
-import plistlib
+import sys
 import logging
 
 import citadel.yaml
@@ -98,3 +97,23 @@ def bash_syntax(string):
     except:
         logging.debug(string)
         return False
+
+def load_module(filename, path, classname=None):
+    if not classname:
+        classname = filename.capitalize()
+    directory = os.path.dirname(path)
+    if not directory in sys.path:
+        sys.path.insert(0, directory)
+        #sys.path.append(directory)
+    try:
+        module = __import__(filename, globals(), locals(), [], -1)
+        class_instance = getattr(module, classname)
+        return class_instance
+    except SyntaxError as e:
+        raise e
+    except ImportError as e:
+        print e
+        raise NotImplementedError("Unable to find requested module in path: %s" % (path))
+
+def format_cmd(command_list):
+    return ' \\\n  '.join(command_list)

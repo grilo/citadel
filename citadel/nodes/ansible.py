@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Ansible(citadel.nodes.root.Node):
+class Ansible(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Ansible, self).__init__(yml, path)
@@ -17,13 +17,12 @@ class Ansible(citadel.nodes.root.Node):
         # Unsure if this is python3 compatible
         # Always display maven's version
         ansible_exec = citadel.tools.find_executable('ansible-playbook')
-        parser = citadel.parser.Options(self.yml)
 
         if 'deploy' in path:
-            parser.is_required('inventory')
-            parser.is_required('playbook')
+            self.parser.is_required('inventory')
+            self.parser.is_required('playbook')
 
-            errors, parsed, ignored = parser.validate()
+            errors, parsed, ignored = self.parser.validate()
 
             if len(errors):
                 self.errors.extend(errors)
@@ -36,4 +35,4 @@ class Ansible(citadel.nodes.root.Node):
                     continue
                 cmd.append('-e %s=%s' % (k, v))
             self.output.append('echo "Deploying with ansible: %s"' % (parsed['playbook']))
-            self.output.append(self.format_cmd(cmd))
+            self.output.append(citadel.tools.format_cmd(cmd))

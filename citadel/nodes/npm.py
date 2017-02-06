@@ -2,11 +2,11 @@
 
 import glob
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Npm(citadel.nodes.root.Node):
+class Npm(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Npm, self).__init__(yml, path)

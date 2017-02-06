@@ -66,7 +66,7 @@ class Options:
             for value in group:
                 if value in self.yml:
                     found += 1
-            if found > 0 and found != len(value):
+            if found > 0 and found != len(group):
                 errors.append('The following values must be specified together: %s' % (' '.join(group)))
 
         for k, v in self.yml.items():

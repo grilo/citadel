@@ -3,11 +3,11 @@
 import logging
 import os
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Rbenv(citadel.nodes.root.Node):
+class Rbenv(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Rbenv, self).__init__(yml, path)

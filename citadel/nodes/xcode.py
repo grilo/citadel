@@ -3,36 +3,35 @@
 import logging
 import os
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Xcode(citadel.nodes.root.Node):
+class Xcode(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Xcode, self).__init__(yml, path)
 
         xcode_exec = citadel.tools.find_executable('xcodebuild')
-        parser = citadel.parser.Options(self.yml)
 
         if not 'build' in path:
             return
 
-        parser.add_default('app_id', None)
-        parser.add_default('lifecycle', 'clean archive')
-        parser.add_default('OTHER_CODE_SIGN_FLAGS', '')
-        parser.add_default('CONFIGURATION_BUILD_DIR', 'build')
-        parser.add_default('CODE_SIGN_IDENTITY', '$CODE_SIGN_IDENTITY')
-        parser.add_default('DEVELOPMENT_TEAM', '$TEAM_ID')
-        parser.add_default('PROVISIONING_PROFILE_SPECIFIER', '$TEAM_ID/$UUID')
+        self.parser.add_default('app_id', None)
+        self.parser.add_default('lifecycle', 'clean archive')
+        self.parser.add_default('OTHER_CODE_SIGN_FLAGS', '')
+        self.parser.add_default('CONFIGURATION_BUILD_DIR', 'build')
+        self.parser.add_default('CODE_SIGN_IDENTITY', '$CODE_SIGN_IDENTITY')
+        self.parser.add_default('DEVELOPMENT_TEAM', '$TEAM_ID')
+        self.parser.add_default('PROVISIONING_PROFILE_SPECIFIER', '$TEAM_ID/$UUID')
 
-        parser.is_required('scheme')
-        parser.is_required('archivePath')
-        parser.is_required('configuration')
-        parser.at_most_one(['workspace', 'project'])
-        parser.if_one_then_all(['keychain', 'keychain_password'])
+        self.parser.is_required('scheme')
+        self.parser.is_required('archivePath')
+        self.parser.is_required('configuration')
+        self.parser.at_most_one(['workspace', 'project'])
+        self.parser.if_one_then_all(['keychain', 'keychain_password'])
 
-        errors, parsed, ignored = parser.validate()
+        errors, parsed, ignored = self.parser.validate()
         self.errors.extend(errors)
         if len(errors):
             return
@@ -92,7 +91,7 @@ class Xcode(citadel.nodes.root.Node):
         for k, v in ignored.items():
             cmd.append('%s="%s"' % (k, v))
         self.output.append('echo "Building..."')
-        self.output.append(self.format_cmd(cmd))
+        self.output.append(citadel.tools.format_cmd(cmd))
 
         self.output.append('echo "Generating IPA file..."')
         export_cmd = ['%s' % (xcode_exec)]
@@ -101,7 +100,7 @@ class Xcode(citadel.nodes.root.Node):
         export_cmd.append('-exportProvisioningProfile "$PP_NAME"')
         export_cmd.append('-archivePath "%s"' % (parsed['archivePath']))
         export_cmd.append('-exportPath "%s"' % (parsed['exportPath']))
-        self.output.append(self.format_cmd(export_cmd))
+        self.output.append(citadel.tools.format_cmd(export_cmd))
         self.output.append(self.codesign_verify(parsed['exportPath']))
 
     def get_provisioning_profile(self, app_id, keychain):

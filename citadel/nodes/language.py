@@ -2,11 +2,11 @@
 
 import re
 
-import citadel.nodes.root
+import citadel.nodes.node
 import citadel.tools
 
 
-class Language(citadel.nodes.root.Node):
+class Language(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Language, self).__init__(yml, path)

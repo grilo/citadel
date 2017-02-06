@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import citadel.nodes.root
+import citadel.nodes.node
 
 
-class Platform(citadel.nodes.root.Node):
+class Platform(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Platform, self).__init__(yml, path)
