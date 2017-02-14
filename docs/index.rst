@@ -7,9 +7,13 @@ Welcome to CITADel's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
+    :maxdepth: 1
+    :caption: Contents:
+    :hidden:
+    
+    about
+    modules
+    developers
 
 
 Indices and tables
