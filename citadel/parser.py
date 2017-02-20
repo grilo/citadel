@@ -14,6 +14,8 @@ class Options:
         self.accounted = []
 
     def add_default(self, key, value):
+        if not key in self.accounted:
+            self.accounted.append(key)
         if not key in self.yml.keys():
             self.yml[key] = value
 

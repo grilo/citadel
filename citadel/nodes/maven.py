@@ -50,6 +50,10 @@ class Maven(citadel.nodes.node.Base):
                     version = self.read_jar_version(file, parsed['groupId'], parsed['artifactId'])
                 elif file.endswith('.ipa'):
                     version = self.read_ipa_version(file)
+                elif file.endswith('.rpm'):
+                    version = self.read_rpm_version(file)
+                elif file.endswith('.car'):
+                    version = self.read_car_version(file)
                 else:
                     self.add_error('Unable to automatically induce version for: %s' % (parsed['file']))
 
@@ -62,11 +66,12 @@ class Maven(citadel.nodes.node.Base):
                 parsed['version'] += '-SNAPSHOT'
 
             cmd = ['%s deploy:deploy-file %s' % (mvn_exec, parsed['opts'])]
+            del parsed['opts']
             for k, v in parsed.items():
                 cmd.append('-D%s="%s"' % (k, v))
-
             for k, v in ignored.items():
                 cmd.append('-D%s="%s"' % (k, v))
+
             self.output.append(citadel.tools.format_cmd(cmd))
 
     def read_apk_version(self, file):
@@ -78,7 +83,13 @@ class Maven(citadel.nodes.node.Base):
     def read_jar_version(self, file, group_id, artifact_id):
         return "VERSION=$(unzip -p '%s' '*%s*/*%s*/pom.properties' | grep version | awk -F= '{print $2}')" % (file, group_id, artifact_id)
 
+    def read_car_version(self, file):
+        return """VERSION=$(unzip -p '%s' 'artifacts.xml' | grep 'artifact name' | awk -F\\\" '{print $4}')""" % (file)
+
     def read_ipa_version(self, file):
         return """VERSION=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties::CFBundleVersion" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")
-    VERSION=$VERSION-$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")"""
+VERSION=$VERSION-$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")"""
 
+    def read_rpm_version(self, file):
+        return """RPMFILE=$(find . -type f -name "%s" -exec ls -rt {} \; | tail -1)
+VERSION=$(rpm -qp --queryformat '%%{VERSION}' "$RPMFILE" | sed 's/[-_]SNAPSHOT//g')""" % (file)

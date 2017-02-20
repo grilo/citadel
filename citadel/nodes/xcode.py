@@ -20,7 +20,7 @@ class Xcode(citadel.nodes.node.Base):
         self.parser.add_default('app_id', None)
         self.parser.add_default('lifecycle', 'clean archive')
         self.parser.add_default('OTHER_CODE_SIGN_FLAGS', '')
-        self.parser.add_default('CONFIGURATION_BUILD_DIR', 'build')
+#        self.parser.add_default('CONFIGURATION_BUILD_DIR', 'build')
         self.parser.add_default('CODE_SIGN_IDENTITY', '$CODE_SIGN_IDENTITY')
         self.parser.add_default('DEVELOPMENT_TEAM', '$TEAM_ID')
         self.parser.add_default('PROVISIONING_PROFILE_SPECIFIER', '$TEAM_ID/$UUID')
@@ -37,9 +37,9 @@ class Xcode(citadel.nodes.node.Base):
             return
 
         # Check for absolute paths
-        if not parsed['CONFIGURATION_BUILD_DIR'].startswith('/') and \
-            not parsed['CONFIGURATION_BUILD_DIR'].startswith('$'):
-            parsed['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), parsed['CONFIGURATION_BUILD_DIR'])
+#        if not parsed['CONFIGURATION_BUILD_DIR'].startswith('/') and \
+#            not parsed['CONFIGURATION_BUILD_DIR'].startswith('$'):
+#            parsed['CONFIGURATION_BUILD_DIR'] = os.path.join(os.getcwd(), parsed['CONFIGURATION_BUILD_DIR'])
 
         # Set exportPath if it doesn't exist already
         if 'exportPath' in yml.keys():
@@ -79,6 +79,7 @@ class Xcode(citadel.nodes.node.Base):
 
         if 'keychain' in parsed.keys():
             parsed['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (parsed['keychain'])
+            cmd.append('OTHER_CODE_SIGN_FLAGS="%s"' % (parsed['OTHER_CODE_SIGN_FLAGS']))
             self.output.append(self.unlock_keychain(parsed['keychain'], parsed['keychain_password']))
             self.output.append(self.get_provisioning_profile(parsed['app_id'], parsed['keychain']))
         else:

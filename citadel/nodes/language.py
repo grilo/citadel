@@ -40,7 +40,7 @@ class Language(citadel.nodes.node.Base):
         try:
             rc, out = citadel.tools.run_cmd('update-alternatives --list %s' % (binary))
             if rc == 2:
-                rc, out = run_cmd('update-alternatives --display %s' % (binary))
+                rc, out = citadel.tools.run_cmd('update-alternatives --display %s' % (binary))
                 outlines = []
                 for line in out.splitlines():
                     if line.startswith('/'):

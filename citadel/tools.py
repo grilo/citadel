@@ -20,7 +20,7 @@ def run_cmd(cmd):
     return p.returncode, stdout
 
 def find_executable(executable):
-    return '"$(which %s)"' % (executable)
+    return executable
 
 def get_branch_name(directory):
     branch_name = None

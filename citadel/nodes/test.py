@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import citadel.nodes.node.
+import citadel.nodes.node
 
 
 class Test(citadel.nodes.node.Base):
