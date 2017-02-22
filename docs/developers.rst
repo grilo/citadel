@@ -1,10 +1,10 @@
-==========
-Developers
-==========
+============
+Contributing
+============
 
 .. toctree::
     :maxdepth: 1
-    :caption: Modules:
+    :caption: Contributing:
     :glob:
 
     api/citadel.nodes.*

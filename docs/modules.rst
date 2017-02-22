@@ -7,4 +7,4 @@ Modules
     :caption: Modules:
     :glob:
 
-    api/citadel.nodes.*
+    api/*

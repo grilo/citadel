@@ -3,8 +3,19 @@
 import citadel.nodes.node
 import citadel.tools
 
-
 class Ansible(citadel.nodes.node.Base):
+    """Runs ansible-playbook with the given parameters.
+
+    Something.
+    Something.
+
+    :param inventory: The inventory file.
+    :type inventory: required
+
+    :param playbook: The playbook.
+    :type playbook: required
+
+    """
 
     def __init__(self, yml, path):
         super(Ansible, self).__init__(yml, path)
