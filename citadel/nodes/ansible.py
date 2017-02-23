@@ -4,10 +4,10 @@ import citadel.nodes.node
 import citadel.tools
 
 class Ansible(citadel.nodes.node.Base):
-    """Runs ansible-playbook with the given parameters.
+    """:synopsis: Run ansible-playbook.
 
-    Something.
-    Something.
+    :requirements: None
+    :platform: Any
 
     :param inventory: The inventory file.
     :type inventory: required
@@ -15,35 +15,66 @@ class Ansible(citadel.nodes.node.Base):
     :param playbook: The playbook.
     :type playbook: required
 
+    **Usage**
+
+    .. code-block:: yaml
+        :linenos:
+
+        deploy:
+          ansible:
+            inventory: $ANSIBLE_HOME/inventory/development
+            playbook: $ANSIBLE_HOME/playbooks/some_playbook.yml
+
+    The paths for both the inventory and playbook files may be hardcoded, but
+    but the environment is expected to provide an ANSIBLE_HOME variable to be
+    referenced from within the yaml.
+
+    Additional parameters may be specified and will be globbed up into the **-e** option
+    of ansible-playbook's CLI.
+
+    .. code-block:: yaml
+        :linenos:
+
+        deploy:
+          ansible:
+            inventory: $ANSIBLE_HOME/development
+            playbook: $ANSIBLE_HOME/playbooks/some_playbook.yml
+            parameter: value
+            another_parameter: value
+
+
+    Would be transformed into:
+
+    .. code-block:: bash
+        :linenos:
+
+        # Assumes ANSIBLE_HOME=/path/to
+        ansible-playbook -i /path/to/inventory/development \\
+            -e "parameter=value" \\
+            -e "another_parameter=value" \\
+            /path/to/playbooks/some_playbook.yml
     """
 
     def __init__(self, yml, path):
         super(Ansible, self).__init__(yml, path)
         self.playbook = yml
 
-        if not isinstance(yml, dict):
-            self.add_error('Parsing error, probably malformed yaml (expected dict).')
-            return
-
-        # Unsure if this is python3 compatible
-        # Always display maven's version
         ansible_exec = citadel.tools.find_executable('ansible-playbook')
 
-        if 'deploy' in path:
-            self.parser.is_required('inventory')
-            self.parser.is_required('playbook')
+        self.parser.is_required('inventory')
+        self.parser.is_required('playbook')
 
-            errors, parsed, ignored = self.parser.validate()
+        errors, parsed, ignored = self.parser.validate()
 
-            if len(errors):
-                self.errors.extend(errors)
-                return
+        if len(errors):
+            self.errors.extend(errors)
+            return
 
-            cmd = ['%s -v -i %s %s' % (ansible_exec, parsed['inventory'], parsed['playbook'])]
+        cmd = ['%s -v -i %s %s' % (ansible_exec, parsed['inventory'], parsed['playbook'])]
 
-            for k, v in ignored.items():
-                if k == 'inventory' or k == 'playbook':
-                    continue
-                cmd.append('-e %s=%s' % (k, v))
-            self.output.append('echo "Deploying with ansible: %s"' % (parsed['playbook']))
-            self.output.append(citadel.tools.format_cmd(cmd))
+        for k, v in ignored.items():
+            if k == 'inventory' or k == 'playbook':
+                continue
+            cmd.append('-e %s=%s' % (k, v))
+        self.output.append('echo "Deploying with ansible: %s"' % (parsed['playbook']))
+        self.output.append(citadel.tools.format_cmd(cmd))
