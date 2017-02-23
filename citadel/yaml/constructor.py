@@ -6,6 +6,7 @@ from error import *
 from nodes import *
 
 import datetime
+import logging
 
 import binascii, re, sys, types
 
@@ -143,6 +144,8 @@ class BaseConstructor(object):
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
             value = self.construct_object(value_node, deep=deep)
+            if value == None:
+                logging.warning('YAML Parser: the following key has no value: %s', key)
             pairs.append((key, value))
         return pairs
 
