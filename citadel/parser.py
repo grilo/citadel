@@ -7,6 +7,10 @@ class Options:
 
     def __init__(self, yml):
         self.yml = copy.deepcopy(yml)
+
+        if self.yml == None:
+            raise SyntaxError('Parsing error, probably malformed yaml. Check the log for warnings.')
+
         self.required = []
         self.at_least = []
         self.at_most = []
