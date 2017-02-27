@@ -7,6 +7,24 @@ import citadel.nodes.node
 
 
 class Root(citadel.nodes.node.Base):
+    """:synopsis: Append a small bash header for all citadel scripts.
+
+    :requirements: None
+    :platform: Any
+
+    This module will be injected by default and requires no explicit usage to
+    actually work. It prepends common options to all citadel scripts:
+
+    .. code-block:: bash
+        :linenos:
+
+        #!/usr/bin/env bash
+
+        set -eu
+        set -o pipefail
+        set -x
+    """
+
 
     def __init__(self, yml, path=[], environment=None):
         super(Root, self).__init__(yml, path)

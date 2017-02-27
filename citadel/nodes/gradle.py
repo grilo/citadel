@@ -7,6 +7,39 @@ import citadel.tools
 
 
 class Gradle(citadel.nodes.node.Base):
+    """:synopsis: Run gradle for builds.
+
+    :requirements: None
+    :platform: Any
+
+    :param lifecycle: The lifecycle stages to be run (default: clean assemble).
+    :type lifecycle: optional
+
+    **Usage**
+
+    .. code-block:: yaml
+        :linenos:
+
+        build:
+          gradle:
+            lifecycle: clean assemble
+            httpProxy: 127.0.0.1
+
+    Apart from the lifecycle, all the unrecognized options will be translated \
+	into ``-Doption=value``.
+
+	As such, the above statement would become.
+
+    .. code-block:: bash
+        :linenos:
+
+        gradle clean assemble -DhttpProxy=127.0.0.1
+
+
+    If 'gradle' isn't found in the PATH (tested using a which command), then
+    the gradle wrapper will be used (a ``gradlew`` executable file must exist
+    at the root of the project).
+    """
 
     def __init__(self, yml, path):
         super(Gradle, self).__init__(yml, path)

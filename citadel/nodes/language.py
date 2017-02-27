@@ -7,6 +7,49 @@ import citadel.tools
 
 
 class Language(citadel.nodes.node.Base):
+    """:synopsis: Sets a required language/runtime for the environment.
+
+    :requirements: None
+    :platform: Any
+
+    :param language: The language for the build environment.
+    :type language: optional
+
+    **Usage**
+
+    .. code-block:: yaml
+        :linenos:
+
+        language: java1.8
+
+    Supported languages are:
+	# java
+	# npm (javascript)
+	# xcode (objective C/swift)
+
+	The language should be specified with a number. Examples below:
+
+    .. code-block:: yaml
+        :linenos:
+
+		language: npm2.6
+		language: java1.8
+		language: java7
+		xcode: 8.1
+
+	Depending on the language choice, the heuristic will be different. For Java,
+	the "alternatives" command will be used (incompatible with OSX and Windows).
+	For npm, the binary will be looked for in the PATH (which command). For
+	Xcode, the "xcode-select" command will be used with the following arguments:
+
+    .. code-block:: bash
+        :linenos:
+
+        sudo xcode-select -s /Applications/Xcode%s.app' % (wanted_version)
+
+	This means that this module's platform support is extremely limited and
+	should be used with care.
+    """
 
     def __init__(self, yml, path):
         super(Language, self).__init__(yml, path)

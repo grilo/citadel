@@ -7,6 +7,72 @@ import citadel.tools
 
 
 class Npm(citadel.nodes.node.Base):
+    """:synopsis: Runs the NPM executable.
+
+    :requirements: None
+    :platform: Any
+
+    **Build**
+
+    To run ``npm`` in a build directive, simply write the whole command line
+    as you normally would. Example:
+
+    .. code-block:: yaml
+        :linenos:
+
+        build:
+          npm: compile run start --option=Value
+
+    No options are currently supported.
+
+	**Deploy**
+
+	:param files: The files to publish.
+	:type files: required
+
+	:param registry: The registry to publish the packages to (defaults to npmjs.org).
+	:type registry: optional
+
+	:param scope: The scope to publish the packages under.
+	:type scope: optional
+
+    **Usage**
+
+    .. code-block:: yaml
+        :linenos:
+
+        deploy:
+          npm:
+            files:
+              - some_file.tgz
+              - some_directory/
+            registry: https://artifactory.company.com/api/npm/jspackages
+            scope: somenamespace
+
+    Publishes all the files present in the ``files`` directive with the
+    provided parameters. It will simply loop over the files with all the
+    given options. The ``deploy:npm`` directive translates into:
+
+    If scope includes a "@" as prefix (*@scope*) it will be silently
+    ignored.
+
+    .. code-block:: bash
+        :linenos:
+
+        npm \\
+            --registry https://artifactory.company.com/api/npm/jspackages \\
+            --scope somenamespace \\
+            publish \\
+            some_file.tgz
+
+        npm \\
+            --registry https://artifactory.company.com/api/npm/jspackages \\
+            --scope somenamespace \\
+            publish \\
+            some_directory
+
+    """
+
 
     def __init__(self, yml, path):
         super(Npm, self).__init__(yml, path)
