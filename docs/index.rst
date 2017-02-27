@@ -12,6 +12,7 @@ Welcome to CITADel's documentation!
     :hidden:
     
     about
+    gettingstarted
     modules
     developers
 
