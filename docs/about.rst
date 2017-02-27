@@ -3,7 +3,7 @@ About
 =====
 
 CITADel (Continuous Integration Testing And DELivery) is heavily inspired by
-tools such as `<travis-ci.org>_`, `<circleci.com>_` and the likes. The goals
+tools such as `<https://travis-ci.org>`_, `<https://circleci.com>`_ and the likes. The goals
 is to provide autonomy and allow the developer to decouple his/her project
 from the standard lifecycle tools such as Jenkins.
 

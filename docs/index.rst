@@ -13,8 +13,9 @@ Welcome to CITADel's documentation!
     
     about
     gettingstarted
+    customizethebuild 
     modules
-    developers
+    contributing 
 
 
 Indices and tables
@@ -22,4 +23,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
