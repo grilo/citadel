@@ -19,7 +19,7 @@ kind of parametrization possible:
 * Different behaviours depending on the environment.
 
 Considerations
---------------
+++++++++++++++
 
 By default, the YAML specification does NOT guarantee order of execution. On
 the other hand, CITADel does. This is the main reason why directives such as
@@ -44,7 +44,7 @@ means a non-sensical lifecycle may happen, but the alternatives don't really
 fix that issue for you.
 
 Build Lifecycle
----------------
++++++++++++++++
 
 While there are no mandatory steps, CITADel will recognize 4 basic ones:
 

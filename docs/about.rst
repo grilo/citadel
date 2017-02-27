@@ -1,4 +1,3 @@
-=====
 About
 =====
 
@@ -18,3 +17,6 @@ The citadel.yml file (by default, it can be anything else) describes your
 project's lifecycle. It's not an executor/runner by itself, it simply
 translates whatever there is in the yml file into standard bash which can then
 be executed at your discretion.
+
+Architecture
+++++++++++++

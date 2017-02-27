@@ -7,7 +7,6 @@ Welcome to CITADel's documentation!
 ===================================
 
 .. toctree::
-    :maxdepth: 1
     :caption: Contents:
     :hidden:
     
@@ -19,7 +18,7 @@ Welcome to CITADel's documentation!
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
