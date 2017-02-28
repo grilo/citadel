@@ -40,6 +40,12 @@ class Npmrc(citadel.nodes.node.Base):
             strict_ssl: false
             token: d12a243482adasjnad
 
+    .. warning::
+
+        Avoid authentication tokens in plain text. CITADel does a best
+        effort to remove them from the logs (anything containing the
+        *password* string), but it's a very imperfect method.
+
     Generates an .npmrc file with the specified options. Any unknown options
     will be passed directly onto the .npmrc file.
 
