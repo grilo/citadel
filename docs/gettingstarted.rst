@@ -102,7 +102,7 @@ braces ({}).
 
 It supports two basic structures: key/value pairs and lists.
 
-To defined a key/value:
+To define a key/value:
 
 .. code-block:: yaml
     :linenos:
