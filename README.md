@@ -6,7 +6,10 @@ Draws inspiration from, and emulates the behaviour of, tools such as TravisCI,
 CircleCI and GitLab-CI.
 
 ## Documentation
-The project's documentation may be found in: https://citadel.readthedocs.io
+https://citadel.readthedocs.io
+
+## Motivation
+https://www.ingtechit.es/joaogrilo/inversion-of-control/
 
 ## Usage
 
