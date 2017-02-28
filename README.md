@@ -2,7 +2,7 @@
 
 CITADel means "Continuous Integration, Testing, And Delivery".
 
-Draws inspiration from and emulates the behaviour of tools such as TravisCI,
+Draws inspiration from, and emulates the behaviour of, tools such as TravisCI,
 CircleCI and GitLab-CI.
 
 ## Documentation
