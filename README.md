@@ -29,30 +29,3 @@ conditional execution:
 # Do NOT generate the shell for deploy and test stages
 ./citadel-generate -i deploy,test
 ```
-
-## Motivation
-
-Although the cloud offerings are nothing short of fantastic, in the
-corporate environment they're often not a choice due to internal budget
-restrictions or security concerns. The "jenkinsfile" concept is sound,
-but it's attached to a specific tool (Jenkins) and lacks any meaningful
-documentation to actually be of value.
-
-The goal is to have a file at the root of your project which describes the
-general lifecycle of your product (build, publish, testing and deployment).
-The YML description gets translated into a shell (bash) script, ready to
-be executed.
-
-It's a complement to the tools usually used to build projects (such as maven,
-gradle, npm). Those tools usually excel at generating artifacts (condensed
-in the build and publish phase of CITADel), but they aren't very friendly
-when it comes to deploying and testing the actuall product.
-
-## Goals
-
-Should be easy to use (creating the yml description) and easy to extend
-(adding new modules).
-
-It should also generate a shell script, independent of the system where
-it was initially executed. This shell script is meant to be discarded
-but it may also be versioned to ensure build reproduceability.
