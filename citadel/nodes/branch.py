@@ -156,7 +156,7 @@ class Branch(citadel.nodes.node.Base):
             branch_name = out.strip()
 
         # AccuRev
-        rc, out = citadel.tools.run_cmd('AccuRev info')
+        rc, out = citadel.tools.run_cmd('accurev info')
         if rc == 0:
             logging.debug('AccuRev repo detected.')
             for line in out.splitlines():
