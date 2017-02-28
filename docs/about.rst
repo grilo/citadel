@@ -6,6 +6,11 @@ tools such as `<https://travis-ci.org>`_, `<https://circleci.com>`_ and the
 likes. The goal is to provide autonomy and allow the developer to decouple
 his/her project from the standard lifecycle tools such as Jenkins.
 
+The citadel.yml file (by default, it can be anything else) describes your
+project's lifecycle. It's not an executor/runner by itself, it simply
+translates whatever there is in the yml file into standard bash which can then
+be executed at your discretion.
+
 By describing the build/deployment using a yaml file (the complexity will vary
 depending on the requirements), you can now run your application's lifecycle
 in any environment (currently it must support bash). This means that any
@@ -13,10 +18,16 @@ Jenkins job you configure simply needs to invoke CITADel and the rest will be
 taken care of, effectively transforming your own CI solution into something
 similar to other offerings from the cloud.
 
-The citadel.yml file (by default, it can be anything else) describes your
-project's lifecycle. It's not an executor/runner by itself, it simply
-translates whatever there is in the yml file into standard bash which can then
-be executed at your discretion.
+Although third party offerings are nothing short of fantastic, in the
+corporate environment they're often not a choice due to internal budget
+restrictions or security concerns. The "jenkinsfile" concept is sound,
+but it's attached to a specific tool (Jenkins) and lacks any meaningful
+documentation to actually be of value.
+
+It's a complement to the tools usually used to build projects (such as maven,
+gradle, npm). Those tools usually excel at generating artifacts (condensed
+in the build and publish phase of CITADel), but they aren't very friendly
+when it comes to deploying and testing the actual product.
 
 Design Goals
 ++++++++++++

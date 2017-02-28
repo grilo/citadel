@@ -5,6 +5,9 @@ CITADel means "Continuous Integration, Testing, And Delivery".
 Initially built to emulate the behaviour of online tools such as TravisCI,
 CircleCI and GitLab-CI, also draws inspiration from them.
 
+## Documentation
+The project's documentation may be found in: http://citadel.readthedocs.io
+
 ## Usage
 
 There's packaging basis already in the repository, but the most
