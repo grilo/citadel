@@ -18,10 +18,10 @@ following contents:
         lifecycle: clean install
     publish:
       maven:
-      file: target/artifact.jar
-      groupId: com.mycompany.myproject
-      artifactId: service
-      packaging: jar
+        file: target/artifact.jar
+        groupId: com.mycompany.myproject
+        artifactId: service
+        packaging: jar
     deploy:
       script:
         - wget http://artifactory/com/mycompany/myproject/service/LATEST/service-LATEST.jar

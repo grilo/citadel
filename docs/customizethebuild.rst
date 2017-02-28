@@ -67,9 +67,8 @@ fallback to :class:`citadel.nodes.script`:
 Examples
 ++++++++
 
-These aren't necessarily the best examples in the world, they're simply to
-showcase the possibilities of standard configurations required for relatively
-complex lifecycles.
+Showcase of the possibilities when performing a configuration for applications
+with relatively complex lifecycles.
 
 Android APK
 -----------

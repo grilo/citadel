@@ -14,6 +14,7 @@ Welcome to CITADel's documentation!
     gettingstarted
     customizethebuild 
     modules
+    faq
     contributing 
 
 
