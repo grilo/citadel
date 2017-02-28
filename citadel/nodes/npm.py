@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import glob
+import os
 
 import citadel.nodes.node
 import citadel.tools
@@ -72,8 +72,6 @@ class Npm(citadel.nodes.node.Base):
             some_directory
 
     """
-
-
     def __init__(self, yml, path):
         super(Npm, self).__init__(yml, path)
 
@@ -86,28 +84,37 @@ class Npm(citadel.nodes.node.Base):
         elif 'publish' in path:
             registry = 'https://registry.npmjs.org'
             scope = None
+            file_list = []
             if 'registry' in yml.keys():
                 registry = yml['registry']
             if 'scope' in yml.keys():
                 scope = yml['scope']
-            for pkg in yml['files']:
-                # Make sure we support shell-like expansions
-                # such as *.tgz
-                globbed = glob.glob(pkg)
-                if globbed:
-                    for g in globbed:
-                        self.publish_pkg(g, registry, scope)
-                else:
-                    self.publish_pkg(pkg, registry, scope)
 
-    def publish_pkg(self, pkg, registry=None, scope=None):
-        npm_exec = citadel.tools.get_executable('npm')
-        cmd = npm_exec
-        if registry:
-            cmd += ' --registry %s' % (registry)
-        if scope:
-            if not scope.startswith('@'):
-                scope = '@' + scope
-            cmd += ' --scope %s' % (scope)
-        cmd += ' publish %s' % (pkg)
-        self.output.append(cmd)
+
+            if isinstance(yml['files'], list):
+                file_list.extend(yaml['files'])
+            else:
+                file_list.append(yml['files'])
+
+            for file in file_list:
+                dirname = os.path.dirname(file)
+                filename = os.path.basename(file)
+                self.output.append(self.publish_pkg(dirname, filename, registry, scope))
+
+    def publish_pkg(self, directory, wildcard, registry, scope=None):
+        if not scope:
+            scope = ''
+        return """
+filelist=$(find %s -maxdepth 1 -name "%s" | grep -v "^%s$")
+if [ $(echo "${filelist}" | wc -l) -eq 0 ] ; then
+    echo "Unable to find any packages to publish!"
+else
+    cmd="npm --registry %s"
+    scope="%s"
+    if [ ! -z "$scope" ] ; then
+        cmd="$cmd --scope $scope"
+    fi
+    for pkg in $filelist ; do
+        $cmd publish $pkg
+    done
+fi""" % (directory, wildcard, directory, registry, scope)
