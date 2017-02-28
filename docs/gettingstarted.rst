@@ -4,7 +4,14 @@ Getting Started
 Developers
 ++++++++++
 
-Create a new file called ``citadel.yml`` to the root of your project with the
+Clone the contents of the citadel repository:
+
+.. code-block:: bash
+    :linenos:
+
+    git clone https://github.com/grilo/citadel.git
+
+Create a file called ``citadel.yml`` at the root of your project with the
 following contents:
 
 .. code-block:: yaml
@@ -27,6 +34,13 @@ following contents:
         - wget http://artifactory/com/mycompany/myproject/service/LATEST/service-LATEST.jar
         - scp service-LATEST.jar user@remotehost:/aplicaciones/to_deploy/
         - /applications/scripts/deploy.sh artifact.jar
+
+Run it:
+
+.. code-block:: bash
+    :linenos:
+
+    python citadel/citadel-generate | bash
 
 This example will build your java project by running the maven lifecycle. The
 lifecycle will generate an artifact which will then get uploaded using the
