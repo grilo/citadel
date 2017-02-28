@@ -63,3 +63,131 @@ fallback to :class:`citadel.nodes.script`:
       script:
         - mvn clean install
 
+
+Examples
+++++++++
+
+These aren't necessarily the best examples in the world, they're simply to
+showcase the possibilities of standard configurations required for relatively
+complex lifecycles.
+
+Android APK
+-----------
+
+.. code-block:: yaml
+    :linenos:
+
+	platform: android
+	language: java1.8
+
+	build:
+	  script:
+		- git checkout $BRANCH
+		- bash configure_workspace.sh from_bundles
+	  gradle:
+		lifecycle: clean assemble
+
+	publish:
+	  development:
+		branch: DEV
+		maven:
+		  file: Native-Android/build/outputs/apk/Native-Android-debug-unaligned.apk
+		  artifactId: NATIVEFRAME
+		  groupId: com.company.android
+		  packaging: apk
+		  url: http://jenkins.company.com:8080/artifactory/repo-snapshots
+		  snapshot: True
+		  generatePom: True
+		  repositoryId: repo-snapshots
+		  opts: -q -B -U -s /home/jenkins/.m2/settings.xml
+	  preproduction:
+		branch: PRE
+		maven:
+		  file: Native-Android/build/outputs/apk/Native-Android-debug-unaligned.apk
+		  artifactId: NATIVEFRAME
+		  groupId: com.company.android
+		  packaging: apk
+		  url: http://jenkins.company.com:8080/artifactory/repo-snapshots
+		  snapshot: True
+		  generatePom: True
+		  repositoryId: repo-snapshots
+		  opts: -q -B -U -s /home/jenkins/.m2/settings.xml
+	deploy:
+	  development:
+		branch: DEV
+		ansible:
+		  inventory: $ANSIBLE_HOME/environments/development
+		  playbook: $ANSIBLE_HOME/playbooks/deploy_nativeapps.yml
+		  platform: ANDROID
+		  packaging: apk
+		  artifact_group: com.company.android
+		  artifact_id: nativeframe
+		  version: latest
+		script:
+		  - perl /home/jenkins/CLI/utils/nativeapps/generate_index.pl -c "/home/jenkins/.ssh/jenkins.rsa"
+
+iOS IPA
+-------
+
+.. code-block:: yaml
+    :linenos:
+
+	platform: ios
+	language: xcode-beta
+
+	build:
+	  script:
+		- pod setup
+		- pod install
+		- sed -i .bak s/'com.provider.iosapp'/'com.company.iosapp'/"Application release-Info.plist"
+		- sed -i .bak s/'com.provider.iosapp'/'com.company.iosapp'/"Application-Info.plist"
+		- sed -i .bak s/'com.provider.iosapp'/'com.company.iosapp'/"Application.xcodeproj/project.pbxproj"
+	  xcode:
+		app_id: com.company.iosapp
+		lifecycle: clean archive
+		workspace: Application.xcworkspace
+		scheme: AppScheme
+		archivePath: build/Application.xcarchive
+		configuration: Debug
+		keychain: /Users/jenkins/Library/Keychains/mobileapps.keychain
+		keychain_password: $KEYCHAIN_PASSWORD
+		entitlement: Application/Application.entitlements
+		ENABLE_BITCODE: No
+		IPHONEOS_DEPLOYMENT_TARGET: 6.0
+
+	publish:
+	  development:
+		branch: DEV
+		maven:
+		  file: build/Application.ipa
+		  artifactId: iosapp
+		  groupId: com.company
+		  packaging: ipa
+		  url: http://jenkins.company.com:8080/artifactory/repo-snapshots
+		  repositoryId: repo-snapshots
+		  opts: -q -B -U -s /home/jenkins/.m2/settings.xml
+	  preproduction:
+		branch: PRE
+		maven:
+		  file: build/Application.ipa
+		  artifactId: iosapp 
+		  groupId: com.company
+		  packaging: ipa
+		  url: http://jenkins.company.com:8080/artifactory/repo-snapshots
+		  repositoryId: repo-snapshots
+		  opts: -q -B -U -s /home/jenkins/.m2/settings.xml
+
+	deploy:
+	  development:
+		branch: DEV
+		ansible:
+		  inventory: $ANSIBLE_HOME/environments/development
+		  playbook: $ANSIBLE_HOME/playbooks/deploy_nativeapps.yml
+		  platform: IOS
+		  packaging: ipa
+		  artifact_group: com.company
+		  artifact_id: iosapp
+		  version: latest
+		script:
+		  - perl /home/jenkins/CLI/utils/nativeapps/generate_index.pl -c "/Users/jenkins/.ssh/jenkins.rsa"
+

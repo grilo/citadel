@@ -69,3 +69,60 @@ When the tree is finished being built, if any errors are found it will abort
 instantly. If there are no errors, the module :class:`citadel.tree.walker`
 will parse each node and extract the generated values (currently Bash script)
 which will then be output to STDOUT.
+
+Syntax
+++++++
+
+The structure of a ``citadel.yml`` file is as follows:
+
+.. code-block:: yaml
+    :linenos:
+
+    platform: targeted_platform
+    language: used_language
+
+    environment:
+      name1: value1
+      name2: value2
+
+    build:
+      targeted_branch1:
+        branch: branch1_name
+        script:
+          - comand1
+          - comand2
+        used_builder:
+          arg1: value1
+          arg2: value2
+      targeted_branch2:
+        branch: branch2_name
+        used_builder:
+          arg1: value1
+          arg2: value2
+
+    publish:
+      script:
+        - comand1
+        - comand2
+      targeted_branch1:
+        branch: branch1_name
+        used_publisher:
+          arg1: value1
+          arg2: value2
+      targeted_branch2:
+        branch: branch2_name
+        used_publisher:
+          arg1: value1
+          arg2: value2
+
+    deploy:
+      targeted_branch1:
+        branch: branch1_name
+        used_deployer:
+          arg1: value1
+          arg2: value2
+      targeted_branch2:
+        branch: branch2_name
+        used_deployer:
+          arg1: value1
+          arg2: value2
