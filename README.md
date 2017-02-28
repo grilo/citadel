@@ -13,8 +13,7 @@ https://www.ingtechit.es/joaogrilo/inversion-of-control/
 
 ## Usage
 
-There's packaging basis already in the repository, but the most
-straightforward way currently is:
+Clone it and run it:
 ```
 git clone https://github.com/grilo/citadel.git
 python citadel/citadel-generate -f <citadel.yml> | bash
