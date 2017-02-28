@@ -20,3 +20,9 @@ class Base(object):
 
     def add_error(self, msg):
         self.errors.append('%s: %s' % ("/".join(self.path), msg))
+
+
+class Node(Base):
+
+    def __init__(self, yml, path):
+        super(Node, self).__init__(yml, path)
