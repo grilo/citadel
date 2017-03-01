@@ -6,7 +6,7 @@
 Welcome to CITADel's documentation!
 ===================================
 
-Transform your Jenkins into a Travis! (.. or a Circle, or a Codeship, or a
+Make your Jenkins behave like a Travis! (... or a Circle, or a Codeship, or a
 GitLab-CI or something else).
 
 Peruse the documentation at your leisure and feel free to report any issues found
