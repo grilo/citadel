@@ -22,6 +22,14 @@ class Language(citadel.nodes.node.Base):
 
         language: java1.8
 
+    This is a makeshift module. Theoretically we'd have the capability to
+    build containers or virtual machine images which contain the actual
+    environment.
+
+    Since some build environments are often used to build absolutely
+    everything, we make an attempt at correctly configuring it by setting
+    some environment variables before actually starting the builds themselves
+
     Supported languages are:
 
     #. java
@@ -50,10 +58,9 @@ class Language(citadel.nodes.node.Base):
 
     .. warning::
 
-        This means that this module's platform support is extremely limited and
-        should be used with care. For Xcode, make sure the multiple versions
-        are installed in /Applications/Xcode{version}.app. Alternatively, you
-        can just omit the tag to use the default (whatever you have installed).
+        For Xcode, make sure the multiple versions are installed in
+        /Applications/Xcode{version}.app. Alternatively, you can just omit the
+        tag to use the default (whatever you have installed).
     """
 
     def __init__(self, yml, path):
