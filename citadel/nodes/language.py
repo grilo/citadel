@@ -47,8 +47,12 @@ class Language(citadel.nodes.node.Base):
 
         sudo xcode-select -s /Applications/Xcode%s.app' % (wanted_version)
 
-	This means that this module's platform support is extremely limited and
-	should be used with care.
+    .. warning::
+
+	    This means that this module's platform support is extremely limited and
+	    should be used with care. For Xcode, make sure the multiple versions
+        are installed in /Applications/Xcode{version}.app. Alternatively, you
+        can just omit the tag to use the default (whatever you have installed).
     """
 
     def __init__(self, yml, path):
