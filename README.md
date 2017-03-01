@@ -2,8 +2,9 @@
 
 CITADel means "Continuous Integration, Testing, And Delivery".
 
-Draws inspiration from, and emulates the behaviour of, tools such as TravisCI,
-CircleCI and GitLab-CI.
+Transform your Jenkins into a Travis! (.. or a Circle, or a Codeship, or a
+GitLab-CI or something else). It draws inspiration and partially emulates
+the behaviour of such tools.
 
 ## Documentation
 https://citadel.readthedocs.io
