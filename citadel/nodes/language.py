@@ -23,9 +23,10 @@ class Language(citadel.nodes.node.Base):
         language: java1.8
 
     Supported languages are:
-    # java
-    # npm (javascript)
-    # xcode (objective C/swift)
+
+    #. java
+    #. npm (javascript)
+    #. xcode (objective C/swift)
 
     The language should be specified with a number. Examples below:
 
