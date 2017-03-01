@@ -72,44 +72,44 @@ class Npm(citadel.nodes.node.Base):
             some_directory
 
     """
+
     def __init__(self, yml, path):
         super(Npm, self).__init__(yml, path)
-
         npm_exec = citadel.tools.find_executable('npm')
         self.output.append('%s --version' % (npm_exec))
-
         if 'build' in path:
             self.output.append(npm_exec + ' ' + str(yml))
-
         elif 'publish' in path:
-            registry = 'https://registry.npmjs.org'
+            registry = None
             scope = None
             file_list = []
             if 'registry' in yml.keys():
                 registry = yml['registry']
             if 'scope' in yml.keys():
                 scope = yml['scope']
-
-
             if isinstance(yml['files'], list):
                 file_list.extend(yaml['files'])
             else:
                 file_list.append(yml['files'])
-
             for file in file_list:
                 dirname = os.path.dirname(file)
                 filename = os.path.basename(file)
                 self.output.append(self.publish_pkg(dirname, filename, registry, scope))
-
-    def publish_pkg(self, directory, wildcard, registry, scope=None):
+                    
+    def publish_pkg(self, directory, wildcard, registry=None, scope=None):
         if not scope:
             scope = ''
+        if registry:
+            registry = "--registry " + registry
+        else:
+            registry = ''
         return """
-filelist=$(find %s -maxdepth 1 -name "%s" | grep -v "^%s$")
+filelist=$(find %s -maxdepth 1 -name "%s" | sort | grep -v "^%s$")
+npmregistry="%s"
 if [ $(echo "${filelist}" | wc -l) -eq 0 ] ; then
     echo "Unable to find any packages to publish!"
 else
-    cmd="npm --registry %s"
+    cmd="npm $npmregistry"
     scope="%s"
     if [ ! -z "$scope" ] ; then
         cmd="$cmd --scope $scope"
