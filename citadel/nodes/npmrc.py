@@ -12,12 +12,6 @@ class Npmrc(citadel.nodes.node.Base):
     :requirements: None
     :platform: Any
 
-    :param registry: The URL to the registry for the .npmrc file.
-    :type registry: required
-
-    :param email: The email to be used in the .npmrc file.
-    :type email: required
-
     :param always_auth: Whether always-auth should be on/off.
     :type always_auth: optional
 
