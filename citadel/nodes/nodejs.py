@@ -47,15 +47,14 @@ class Nodejs(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Nodejs, self).__init__(yml, path)
-
         if 'node' in self.yml.keys():
             out = self.install_node(self.yml['node'])
             self.output.append(out)
-
+            
         if 'npm' in self.yml.keys():
             out = self.install_npm(self.yml['npm'])
             self.output.append(out)
-
+            
     def install_node(self, version):
         return """%s
 NODE_VERSION="%s"
@@ -65,9 +64,8 @@ ${DOWNLOADER} https://nodejs.org/download/release/${NODE_VERSION}/node-${NODE_VE
 tar -xzf node-${NODE_VERSION}-linux-x64.tar.gz
 rm -f node-${NODE_VERSION}-linux-x64.tar.gz
 export PATH="node-${NODE_VERSION}-linux-x64/bin:$PATH"
-node --version
+echo "Node version: $(node --version)"
 """ % (citadel.tools.find_downloader(), version)
-        pass
 
     def install_npm(self, version):
         return """
@@ -78,4 +76,4 @@ if ! which npm ; then
 fi
 npm install npm@$NPM_VERSION
 export PATH="node_modules/.bin:$PATH"
-npm --version""" % (version)
+echo "NPM version: $(npm --version)" """ % (version)
