@@ -53,47 +53,38 @@ class Language(citadel.nodes.node.Base):
 
     def __init__(self, yml, path):
         super(Language, self).__init__(yml, path)
-        self.parse_lang(yml)
 
-    def parse_lang(self, lang):
-        if 'java' in lang:
+        if 'java' in yml:
             javac = None
-            version = re.search(r'[0-9\.]+', lang).group(0)
-            for alt in self.get_alternatives('javac'):
-                if 'javac' in alt and 'java-' + version in alt:
-                    javac = alt
-            if not javac:
-                self.add_error('Unsupported language (%s).' % (lang))
-                return
-
-            java_home = javac.split("/bin/javac")[0]
-            self.output.append('export JAVA_HOME="%s"' % (java_home))
-        elif 'npm' in lang:
-            wanted_version = re.match(r'npm([0-9\.]+)', lang).group(1)
+            version = re.search(r'[0-9\.]+', yml).group(0)
+            if '.' in version:
+                version = '.'.join(version.split('.', 1)[1:])
+            self.output.append(self.get_alternatives('javac', 'java-' + version))
+            self.output.append('export JAVA_HOME="$(echo $BINARY | sed "s/\/bin\/javac.*//g")"')
+        elif 'npm' in yml:
+            wanted_version = re.match(r'npm([0-9\.]+)', yml).group(1)
             npm = citadel.tools.find_executable('npm')
             rc, out = citadel.tools.run_cmd(npm + ' --version')
             existing_version = out.strip()
             if not re.match(wanted_version, existing_version):
                 self.add_error('Couldn\'t find the required npm version (%s).' % (wanted_version))
-        elif 'xcode' in lang:
-            wanted_version = re.match(r'xcode([A-Za-z0-9\.\-]+)', lang).group(1)
+        elif 'xcode' in yml:
+            wanted_version = re.match(r'xcode([A-Za-z0-9\.\-]+)', yml).group(1)
             self.output.append('sudo xcode-select -s /Applications/Xcode%s.app' % (wanted_version))
 
-    def get_alternatives(self, binary):
-        try:
-            rc, out = citadel.tools.run_cmd('update-alternatives --list %s' % (binary))
-            if rc == 2:
-                rc, out = citadel.tools.run_cmd('update-alternatives --display %s' % (binary))
-                outlines = []
-                for line in out.splitlines():
-                    if line.startswith('/'):
-                        outlines.append(re.sub(r' - .*', '', line))
-                out = "\n".join(outlines)
-        except OSError:
-            rc, out = citadel.tools.run_cmd('/usr/sbin/update-alternatives --display %s' % (binary))
-            outlines = []
-            for line in out.splitlines():
-                if line.startswith('/'):
-                    outlines.append(re.sub(r' - .*', '', line))
-            out = "\n".join(outlines)
-        return out.splitlines()
+    def get_alternatives(self, binary, wildcard):
+		return """
+BINARY="%s"
+BINLOCATOR="update-alternatives"
+
+if ! which update-alternatives > /dev/null ; then
+    BINLOCATOR="/usr/sbin/update-alternatives"
+fi
+
+if ! $($BINLOCATOR --list $BINARY > /dev/null 2>&1) ; then
+    BINLOCATOR="$BINLOCATOR --display"
+else
+    BINLOCATOR="$BINLOCATOR --list"
+fi
+
+BINARY=$($BINLOCATOR $BINARY | sed 's/ - .*//g' | grep "^/.*%s")""" % (binary, wildcard)
