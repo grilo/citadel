@@ -70,7 +70,7 @@ echo "Node version: $(node --version)"
     def install_npm(self, version):
         return """
 NPM_VERSION="%s"
-if ! which npm ; then
+if ! which npm > /dev/null ; then
     echo "At least one npm version must be installed to boostrap any further npm installations."
     exit 1
 fi
