@@ -9,3 +9,7 @@ if ! output=$(pip install nose2 > /dev/null 2>&1) ; then
 fi
 #nose2 --log-level DEBUG
 nose2
+
+
+
+
