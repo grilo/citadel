@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import logging
-
 import citadel.nodes.node
 import citadel.tools
 
@@ -41,7 +39,7 @@ class Nodejs(citadel.nodes.node.Base):
 
     This directive depends on a working internet connection. If any proxy
     is required, remember to specific it either in the ``environment``
-    directive or directly passing the http proxy's options using the 
+    directive or directly passing the http proxy's options using the
     ``-e "http_proxy=value"`` options through ``citadel-generate``.
     """
 
@@ -50,12 +48,13 @@ class Nodejs(citadel.nodes.node.Base):
         if 'node' in self.yml.keys():
             out = self.install_node(self.yml['node'])
             self.output.append(out)
-            
+
         if 'npm' in self.yml.keys():
             out = self.install_npm(self.yml['npm'])
             self.output.append(out)
-            
+
     def install_node(self, version):
+        """Installs nodejs from its primary location."""
         return """%s
 NODE_VERSION="%s"
 [ ! -f "node-${NODE_VERSION}-linux-x64.tar.gz" ] || rm -f node-${NODE_VERSION}-linux-x64.tar.gz
@@ -68,6 +67,9 @@ echo "Node version: $(node --version)"
 """ % (citadel.tools.find_downloader(), version)
 
     def install_npm(self, version):
+        """Install npm, requires an already existing NPM version.
+
+        If node is also requested, it usually brings its own NPM as well."""
         return """
 NPM_VERSION="%s"
 if ! which npm > /dev/null ; then

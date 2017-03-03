@@ -6,6 +6,7 @@ import citadel.parser
 
 
 class Base(object):
+    """Basic node infrastructure."""
 
     def __init__(self, yml, path=[]):
         self.yml = yml
@@ -23,6 +24,7 @@ class Base(object):
 
 
 class Node(Base):
+    """For compatibility, in case someone creates a Node object."""
 
     def __init__(self, yml, path):
         super(Node, self).__init__(yml, path)

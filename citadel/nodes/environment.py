@@ -39,5 +39,5 @@ class Environment(citadel.nodes.node.Base):
             for line in yml:
                 self.output.append('export %s' % (line))
         elif isinstance(yml, dict):
-            for k, v in yml.items():
-                self.output.append('export %s=%s' % (k, v))
+            for key, value in yml.items():
+                self.output.append('export %s=%s' % (key, value))

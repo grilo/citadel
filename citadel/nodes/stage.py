@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import logging
-
 import citadel.nodes.node
 
 

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-import zipfile
-import glob
+"""Collection of generic tools.
+
+These shouldn't be generally called by the modules."""
+
 import os
 import subprocess
 import shlex
-import distutils.spawn
 import collections
 import re
 import sys
@@ -15,34 +16,24 @@ import citadel.yaml
 
 
 def run_cmd(cmd):
-    p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    stdout, stderr = p.communicate()
-    return p.returncode, stdout
+    """Run an arbitraty command, mixes STDERR with STDOUT."""
+    proc = subprocess.Popen(
+        shlex.split(cmd),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True)
+    stdout, stderr = proc.communicate()
+    return proc.returncode, stdout
 
 def find_executable(executable):
+    """Placeholder."""
     return executable
 
-def get_branch_name(directory):
-    branch_name = None
-    old_dir = os.getcwd()
-    os.chdir(directory)
-    # Git
-    rc, out = tools.run_cmd('git rev-parse --abbrev-ref HEAD')
-    if rc == 0:
-        branch_name = out.strip()
-        logging.debug('Git repo detected. Branch: %s' % (branch_name))
-    # AccuRev
-    rc, out = tools.run_cmd('accurev info')
-    if rc == 0:
-        lines = [line for line in out.splitlines() if line.strip().startswith('Basis')]
-        branch_name = lines[0].split(": ")[-1]
-        logging.debug('AccuRev repo detected: %s' % (branch_name))
-
-    os.chdir(old_dir)
-    return branch_name
-
-def ordered_load(stream, Loader=citadel.yaml.Loader, object_pairs_hook=collections.OrderedDict):
-    class OrderedLoader(Loader):
+def ordered_load(stream, base_loader=citadel.yaml.Loader,
+                 object_pairs_hook=collections.OrderedDict):
+    """Load YAML file respecting appearance order."""
+    class OrderedLoader(base_loader):
+        """Placeholder."""
         pass
     def construct_mapping(loader, node):
         loader.flatten_mapping(node)
@@ -53,19 +44,25 @@ def ordered_load(stream, Loader=citadel.yaml.Loader, object_pairs_hook=collectio
     return citadel.yaml.load(stream, OrderedLoader)
 
 def filter_secrets(lines):
+    """Mask values whose key contains 'password'."""
     filtered = []
     for line in lines:
         if re.search('.*password.*', line, flags=re.IGNORECASE):
-            subbed = re.sub(r'(password[\s:=]+)([\'"]*.*[\'"]*)[\s$].*', r'\1(*** hidden ***) ', line)
+            subbed = re.sub(
+                r'(password[\s:=]+)([\'"]*.*[\'"]*)[\s$].*',
+                r'\1(*** hidden ***) ', line)
             filtered.append(subbed)
         elif re.search('.*secret.*', line, flags=re.IGNORECASE):
-            subbed = re.sub(r'(secret[\s:=]+)([\'"]*.*[\'"]*)[\s$]', r'\1(*** hidden ***) ', line)
+            subbed = re.sub(
+                r'(secret[\s:=]+)([\'"]*.*[\'"]*)[\s$]',
+                r'\1(*** hidden ***) ', line)
             filtered.append(subbed)
         else:
             filtered.append(line)
     return filtered
 
 def find_downloader():
+    """Look for a tool to download files with."""
     return """
 DOWNLOADER=""
 if which curl ; then
@@ -77,43 +74,44 @@ else
 fi"""
 
 def find_file(wildcard):
+    """Look for an arbitraty file."""
     dirname = os.path.dirname(wildcard)
     if not dirname:
         dirname = '.'
     filename = os.path.basename(wildcard)
-    return '\n'.join([
-        'FILE=$(find %s -type f -name "%s")' % (dirname, filename),
-        'if [ $(echo "$FILE"  | wc -l) -gt 1 ] ; then',
-        '    echo "Too many results found while looking for %s. Aborting..." && exit 1' % (wildcard),
-        'fi',
-    ])
+    return """FILE=$(find %s -type f -name "%s")
+if [ $(echo "$FILE"  | wc -l) -gt 1 ] ; then
+    echo "Too many results found while looking for %s. Aborting..." && exit 1
+fi""" % (dirname, filename, wildcard)
 
 def bash_syntax(string):
+    """Validate string's compliance with bash syntax."""
     if not string:
         return False
     try:
         subprocess.check_call("echo '%s' | bash -n" % (string), shell=True)
         return True
-    except:
+    except subprocess.CalledProcessError:
         logging.debug(string)
         return False
 
 def load_module(filename, path, classname=None):
+    """Load a python module."""
     if not classname:
         classname = filename.capitalize()
     directory = os.path.dirname(path)
     if not directory in sys.path:
         sys.path.insert(0, directory)
-        #sys.path.append(directory)
     try:
         module = __import__(filename, globals(), locals(), [], -1)
         class_instance = getattr(module, classname)
         return class_instance
-    except SyntaxError as e:
-        raise e
-    except ImportError as e:
-        print e
+    except SyntaxError as exception:
+        raise exception
+    except ImportError as exception:
+        print exception
         raise NotImplementedError("Unable to find requested module in path: %s" % (path))
 
 def format_cmd(command_list):
+    """Returns a nicely indented bash command."""
     return ' \\\n  '.join(command_list)

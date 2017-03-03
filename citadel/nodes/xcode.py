@@ -65,7 +65,7 @@ class Xcode(citadel.nodes.node.Base):
           xcode:
             app_id: com.company.app
             lifecycle: clean archive
-            scheme: SomeName 
+            scheme: SomeName
             workspace: SomeName.xcworkspace
             archivePath: build/SomeName.xcarchive
             configuration: Debug
@@ -156,7 +156,8 @@ class Xcode(citadel.nodes.node.Base):
         if 'exportPath' in yml.keys():
             parsed['exportPath'] = yml['exportPath']
         else:
-            parsed['exportPath'] = os.path.join(os.path.dirname(parsed['archivePath']), parsed['scheme'] + '.ipa')
+            parsed['exportPath'] = os.path.join(os.path.dirname(parsed['archivePath']),
+                                                parsed['scheme'] + '.ipa')
             logging.debug('Setting exportPath to: %s', parsed['exportPath'])
 
         self.output.append('echo "Xcodebuild version: $(xcodebuild -version)"')
@@ -164,13 +165,13 @@ class Xcode(citadel.nodes.node.Base):
 
         # ibtoold may timeout if CoreSimulator has weird stuff
         self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/CoreSimulator"/*')
-        # Builds fail very often due to incorrect caching policies from Xcode (stored in DerivedData)
+        # Builds fail very often due to incorrect caching policies from Xcode
+        # (stored in DerivedData)
         self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/Xcode/DerivedData"/*')
 
         cmd = ['%s' % (xcode_exec)]
 
         lifecycle = parsed['lifecycle']
-        scheme = parsed['scheme']
         if not parsed['archivePath'].startswith('/') and not parsed['archivePath'].startswith('$'):
             parsed['archivePath'] = os.path.join(os.getcwd(), parsed['archivePath'])
 
@@ -190,18 +191,21 @@ class Xcode(citadel.nodes.node.Base):
 
         if 'keychain' in parsed.keys():
             parsed['OTHER_CODE_SIGN_FLAGS'] += ' --keychain \'%s\'' % (parsed['keychain'])
-            cmd.append('OTHER_CODE_SIGN_FLAGS="%s"' % (parsed['OTHER_CODE_SIGN_FLAGS']))
-            self.output.append(self.unlock_keychain(parsed['keychain'], parsed['keychain_password']))
+            cmd.append('OTHER_CODE_SIGN_FLAGS="%s"' %
+                       (parsed['OTHER_CODE_SIGN_FLAGS']))
+            self.output.append(self.unlock_keychain(
+                parsed['keychain'], parsed['keychain_password']))
             self.output.append(self.get_provisioning_profile(parsed['app_id'], parsed['keychain']))
         else:
             logging.warning('No "keychain" found, assuming it\'s already prepared.')
 
         cmd.append('CODE_SIGN_IDENTITY="%s"' % (parsed['CODE_SIGN_IDENTITY']))
         cmd.append('DEVELOPMENT_TEAM="%s"' % (parsed['DEVELOPMENT_TEAM']))
-        cmd.append('PROVISIONING_PROFILE_SPECIFIER="%s"' % (parsed['PROVISIONING_PROFILE_SPECIFIER']))
+        cmd.append('PROVISIONING_PROFILE_SPECIFIER="%s"' %
+                   (parsed['PROVISIONING_PROFILE_SPECIFIER']))
 
-        for k, v in ignored.items():
-            cmd.append('%s="%s"' % (k, v))
+        for key, value in ignored.items():
+            cmd.append('%s="%s"' % (key, value))
         self.output.append('echo "Building..."')
         self.output.append(citadel.tools.format_cmd(cmd))
 
@@ -216,43 +220,44 @@ class Xcode(citadel.nodes.node.Base):
         self.output.append(self.codesign_verify(parsed['exportPath']))
 
     def get_provisioning_profile(self, app_id, keychain):
-        cmd = 'python /home/jenkins/CLI/utils/osx_pprofile.py -k %s' % (keychain)
+        """Download ppbuddy.py and run it.
+
+        Obtains the best provisioning profile/certificate combo."""
+        cmd = 'python ppbuddy/ppbuddy.py -k %s' % (keychain)
         if app_id:
             cmd += ' -a %s' % (app_id)
-
-        return '\n'.join([
-            'cmd="%s"' % (cmd),
-            'if [[ $ENVIRONMENT =~  PRO ]] ; then',
-            '    cmd="$cmd --production"',
-            'fi',
-            'output=$($cmd)',
-            'UUID=$(echo "$output" | head -1 | awk -F@ \'{print $1}\')',
-            'PP_NAME=$(echo "$output" | head -1 | awk -F@ \'{print $2}\')',
-            'CODE_SIGN_IDENTITY=$(echo "$output" | head -1 | awk -F@ \'{print $3}\')',
-            'TEAM_ID=$(echo "$output" | head -1 | awk -F@ \'{print $4}\')',
-        ])
+        return """
+git clone https://github.com/grilo/ppbuddy.git
+cmd="%s"
+if [[ $ENVIRONMENT =~  PRO ]] ; then
+    cmd="$cmd --production"
+fi
+output=$($cmd)
+UUID=$(echo "$output" | head -1 | awk -F@ '{print $1}')
+PP_NAME=$(echo "$output" | head -1 | awk -F@ '{print $2}')
+CODE_SIGN_IDENTITY=$(echo "$output" | head -1 | awk -F@ '{print $3}')
+TEAM_ID=$(echo "$output" | head -1 | awk -F@ '{print $4}')""" % (cmd)
 
     def unlock_keychain(self, keychain, password):
-        return '\n'.join([
-            'echo "Unlocking keychain for code signing."',
-            '/usr/bin/security list-keychains -s "%s"' % (keychain),
-            '/usr/bin/security default-keychain -d user -s "%s"' % (keychain),
-            '/usr/bin/security unlock-keychain -p "%s" "%s"' % (password, keychain),
-            '/usr/bin/security set-keychain-settings -t 7200 "%s"' % (keychain),
-        ])
+        """Unlockes the keychain, required to digitally sign apps."""
+        return """echo "Unlocking keychain for code signing."
+keychain="%s"
+/usr/bin/security list-keychains -s "$keychain"
+/usr/bin/security default-keychain -d user -s "$keychain"
+/usr/bin/security unlock-keychain -p "%s" "$keychain"
+/usr/bin/security set-keychain-settings -t 7200 "$keychain" """ % (keychain, password)
 
     def codesign_verify(self, ipafile):
-        return '\n'.join([
-            'unzip -oq -d "verifycodesign" "%s"' % (ipafile),
-            'unpacked_app="$(ls verifycodesign/Payload/)"',
-            'cd verifycodesign/Payload',
-            'if ! codesign --verify --verbose=4 "$unpacked_app" --no-strict ; then',
-            '    codesign -d -r -vvvvv "$unpacked_app"',
-            '    echo "The application is not signed correctly."',
-            '    echo "This may mean out of date certificate chains, probably hidden."',
-            '    rm -fr "verifycodesign"',
-            '    exit 1',
-            'fi',
-            'cd -',
-            'rm -fr "verifycodesign"',
-        ])
+        """Ensure the code signing was done properly."""
+        return """unzip -oq -d "verifycodesign" "%s"
+unpacked_app="$(ls verifycodesign/Payload/)"
+cd verifycodesign/Payload
+if ! codesign --verify --verbose=4 "$unpacked_app" --no-strict ; then
+    codesign -d -r -vvvvv "$unpacked_app"
+    echo "The application is not signed correctly."
+    echo "This may mean out of date certificate chains, probably hidden."
+    rm -fr "verifycodesign"
+    exit 1
+fi
+cd -
+rm -fr "verifycodesign" """ % (ipafile)

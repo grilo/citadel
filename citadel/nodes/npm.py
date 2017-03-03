@@ -88,15 +88,16 @@ class Npm(citadel.nodes.node.Base):
             if 'scope' in yml.keys():
                 scope = yml['scope']
             if isinstance(yml['files'], list):
-                file_list.extend(yaml['files'])
+                file_list.extend(yml['files'])
             else:
                 file_list.append(yml['files'])
-            for file in file_list:
-                dirname = os.path.dirname(file)
-                filename = os.path.basename(file)
+            for file_to_publish in file_list:
+                dirname = os.path.dirname(file_to_publish)
+                filename = os.path.basename(file_to_publish)
                 self.output.append(self.publish_pkg(dirname, filename, registry, scope))
-                    
+
     def publish_pkg(self, directory, wildcard, registry=None, scope=None):
+        """Run npm publish."""
         if not scope:
             scope = ''
         if registry:

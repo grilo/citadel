@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import os
-
 import citadel.nodes.node
 import citadel.tools
 
@@ -82,11 +80,12 @@ class Npmrc(citadel.nodes.node.Base):
                 parsed['token'],
             )
         )
-        for k, v in ignored.items():
-            self.output.append('echo "%s: %s" >> .npmrc' % (k, v))
+        for key, value in ignored.items():
+            self.output.append('echo "%s: %s" >> .npmrc' % (key, value))
 
     def generate_npmrc(self, always_auth, strict_ssl, token):
-        return """
+        """Generate an .npmrc file."""
+        return r"""
 echo "Generating .npmrc file. If we're having authentication problems, ensure
 the variable \$NPMAUTH is being passed through citadel."
 echo "always-auth: %s" >> .npmrc

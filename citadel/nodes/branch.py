@@ -8,7 +8,7 @@ import citadel.tools
 
 
 class Branch(citadel.nodes.node.Base):
-    """:synopsis: Conditional execution based on regular expression by matching the source control's branch name.
+    """:synopsis: Conditional execution based source control's branch name.
 
     :requirements: git and/or accurev binary in the path
     :platform: Any
@@ -143,21 +143,23 @@ class Branch(citadel.nodes.node.Base):
             logging.debug('Matched branch name for %s: %s', '/'.join(path), branch_name)
             super(Branch, self).__init__(yml, path)
         else:
-            logging.debug('Branch name mismatch for %s. Expected [%s] instead got [%s])', '/'.join(path), yml, branch_name)
+            logging.debug('Branch name mismatch for %s. Expected [%s] instead got [%s])',
+                          '/'.join(path), yml, branch_name)
             self.skip = True
 
     def get_branch_name(self):
+        """Attempts to retrieve branch name using multiple clients."""
         branch_name = None
 
         # Git
-        rc, out = citadel.tools.run_cmd('git rev-parse --abbrev-ref HEAD')
-        if rc == 0:
+        returncode, out = citadel.tools.run_cmd('git rev-parse --abbrev-ref HEAD')
+        if returncode == 0:
             logging.debug('Git repo detected.')
             branch_name = out.strip()
 
         # AccuRev
-        rc, out = citadel.tools.run_cmd('accurev info')
-        if rc == 0:
+        returncode, out = citadel.tools.run_cmd('accurev info')
+        if returncode == 0:
             logging.debug('AccuRev repo detected.')
             for line in out.splitlines():
                 if line.strip().startswith('Basis'):

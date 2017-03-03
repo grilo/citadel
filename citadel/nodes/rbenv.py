@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import logging
-import os
 
 import citadel.nodes.node
 import citadel.tools
@@ -63,6 +62,7 @@ class Rbenv(citadel.nodes.node.Base):
             self.output.append(out)
 
     def rbenv(self, ruby_version):
+        """Install rbenv and implode rvm if it exists."""
         return """export RBENV_VERSION="%s"
 export RBENV_DIR=$HOME/.rbenv
 export RUBY_CONFIGURE_OPTS="--disable-install-doc"
@@ -95,6 +95,7 @@ if ! rbenv versions | grep "$RBENV_VERSION" ; then
 fi""" % (ruby_version)
 
     def cocoapods(self, cocoapods_version):
+        """Install cocoapods. If version inferior to 0.3, install ancient repo."""
         return """VERSION="%s"
 export COCOAPODS_DISABLE_STATS="true"
 if [ ! -d "$HOME/.cocoapods/repos/Old-Specs" ] ; then

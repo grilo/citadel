@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import logging
-
 import citadel.nodes.node
 import citadel.tools
 
@@ -44,7 +42,7 @@ class Maven(citadel.nodes.node.Base):
 
         build:
           maven:
-            lifecycle: clean install 
+            lifecycle: clean install
 
     By default, the pom.xml file that exists in the same directory of the
     citadel.yml file will be invoked. If any other file is meant to be
@@ -62,7 +60,7 @@ class Maven(citadel.nodes.node.Base):
 
         build:
           maven:
-            lifecycle: clean install 
+            lifecycle: clean install
             pom: anotherpom.xml
             opts: -s special.settings.xml
 
@@ -74,7 +72,7 @@ class Maven(citadel.nodes.node.Base):
 
         build:
           maven:
-            lifecycle: clean install 
+            lifecycle: clean install
             skipTests: True
             another.option: SomeValue
 
@@ -179,7 +177,10 @@ class Maven(citadel.nodes.node.Base):
         :linenos:
 
         FILE=$(find target -type f -name "artifact*.jar")
-        VERSION=$(unzip -p '$FILE' '*com.company.project*/*myArtifact*/pom.properties' | grep version | awk -F= '{print $2}')
+        VERSION=$(unzip -p '$FILE' \
+            '*com.company.project*/*myArtifact*/pom.properties' \
+            | grep version \
+            | awk -F= '{print $2}')
         mvn deploy:deploy-file \\
             -Dfile="$FILE-SNAPSHOT" \\ # Snapshot == True adds the -SNAPSHOT suffix
             -Dversion="$VERSION" \\
@@ -203,9 +204,10 @@ class Maven(citadel.nodes.node.Base):
             self.parser.add_default('opts', '')
             errors, parsed, ignored = self.parser.validate()
 
-            cmd = ['%s -f "%s" %s %s' % (mvn_exec, parsed['pom'], parsed['lifecycle'], parsed['opts'])]
-            for k, v in ignored.items():
-                cmd.append('-D%s=%s' % (k, v))
+            cmd = ['%s -f "%s" %s %s' %
+                   (mvn_exec, parsed['pom'], parsed['lifecycle'], parsed['opts'])]
+            for key, value in ignored.items():
+                cmd.append('-D%s=%s' % (key, value))
             self.output.append(citadel.tools.format_cmd(cmd))
 
         elif 'publish' in path:
@@ -223,21 +225,26 @@ class Maven(citadel.nodes.node.Base):
 
             if parsed['file'] and parsed['version'] == '${VERSION}':
 
-                file = parsed['file']
+                artifact = parsed['file']
                 version = ''
 
-                if file.endswith('.apk'):
-                    version = self.read_apk_version(file)
-                elif file.endswith('.jar') or file.endswith('.war') or file.endswith('.ear'):
-                    version = self.read_jar_version(file, parsed['groupId'], parsed['artifactId'])
-                elif file.endswith('.ipa'):
-                    version = self.read_ipa_version(file)
-                elif file.endswith('.rpm'):
-                    version = self.read_rpm_version(file)
-                elif file.endswith('.car'):
-                    version = self.read_car_version(file)
+                if artifact.endswith('.apk'):
+                    version = self.read_apk_version(artifact)
+                elif artifact.endswith('.jar') or \
+                        artifact.endswith('.war') or \
+                        artifact.endswith('.ear'):
+                    version = self.read_jar_version(artifact,
+                                                    parsed['groupId'],
+                                                    parsed['artifactId'])
+                elif artifact.endswith('.ipa'):
+                    version = self.read_ipa_version()
+                elif artifact.endswith('.rpm'):
+                    version = self.read_rpm_version(artifact)
+                elif artifact.endswith('.car'):
+                    version = self.read_car_version(artifact)
                 else:
-                    self.add_error('Unable to automatically induce version for: %s' % (parsed['file']))
+                    self.add_error('Unable to automatically induce version for: %s' %
+                                   (parsed['file']))
 
                 self.output.append(version)
 
@@ -249,29 +256,47 @@ class Maven(citadel.nodes.node.Base):
 
             cmd = ['%s deploy:deploy-file %s' % (mvn_exec, parsed['opts'])]
             del parsed['opts']
-            for k, v in parsed.items():
-                cmd.append('-D%s="%s"' % (k, v))
-            for k, v in ignored.items():
-                cmd.append('-D%s="%s"' % (k, v))
+            for key, value in parsed.items():
+                cmd.append('-D%s="%s"' % (key, value))
+            for key, value in ignored.items():
+                cmd.append('-D%s="%s"' % (key, value))
 
             self.output.append(citadel.tools.format_cmd(cmd))
 
-    def read_apk_version(self, file):
-        #cmd = 'AAPT_TOOL="$ANDROID_HOME/build-tools/$(ls -rt $ANDROID_HOME/build-tools | tail -1)/aapt"\n'
-        cmd = 'AAPT_TOOL="$ANDROID_HOME/build-tools/23.0.3/aapt"\n'
-        cmd += 'VERSION=$($AAPT_TOOL d badging "%s" | grep versionName | awk -F\\\' \'{print $4"-"$6}\')' % (file)
-        return cmd
+    def read_apk_version(self, artifact):
+        """Read version from an APK file."""
+        return """
+#AAPT_TOOL="$ANDROID_HOME/build-tools/$(ls -rt $ANDROID_HOME/build-tools | tail -1)/aapt"
+AAPT_TOOL="$ANDROID_HOME/build-tools/23.0.3/aapt"
+VERSION=$($AAPT_TOOL d badging "%s" | grep versionName | awk -F\\\' \'{print $4"-"$6}\')
+""" % (artifact)
 
-    def read_jar_version(self, file, group_id, artifact_id):
-        return "VERSION=$(unzip -p '%s' '*%s*/*%s*/pom.properties' | grep version | awk -F= '{print $2}')" % (file, group_id, artifact_id)
+    def read_jar_version(self, artifact, group_id, artifact_id):
+        """Read version from a JAR file."""
+        return """
+VERSION=$(unzip -p '%s' '*%s*/*%s*/pom.properties' \
+    | grep version \
+    | awk -F= '{print $2}')
+""" % (artifact, group_id, artifact_id)
 
-    def read_car_version(self, file):
-        return """VERSION=$(unzip -p '%s' 'artifacts.xml' | grep 'artifact name' | awk -F\\\" '{print $4}')""" % (file)
+    def read_car_version(self, artifact):
+        """Read version from a CAR file."""
+        return """
+VERSION=$(unzip -p '%s' 'artifacts.xml' \
+    | grep 'artifact name' \
+    | awk -F\\\" '{print $4}')""" % (artifact)
 
-    def read_ipa_version(self, file):
-        return """VERSION=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties::CFBundleVersion" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")
-VERSION=$VERSION-$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")"""
+    def read_ipa_version(self):
+        """Thanks Steve."""
+        return """
+VERSION=$(/usr/libexec/PlistBuddy \
+    -c "Print ApplicationProperties::CFBundleVersion" \
+    "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")
+VERSION=$VERSION-$(/usr/libexec/PlistBuddy -c \
+    "Print ApplicationProperties:CFBundleShortVersionString" \
+    "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")"""
 
-    def read_rpm_version(self, file):
-        return """RPMFILE=$(find . -type f -name "%s" -exec ls -rt {} \; | tail -1)
-VERSION=$(rpm -qp --queryformat '%%{VERSION}' "$RPMFILE" | sed 's/[-_]SNAPSHOT//g')""" % (file)
+    def read_rpm_version(self, artifact):
+        """Read version from an RPM file."""
+        return r"""RPMFILE=$(find . -type f -name "%s" -exec ls -rt {} \; | tail -1)
+VERSION=$(rpm -qp --queryformat '%%{VERSION}' "$RPMFILE" | sed 's/[-_]SNAPSHOT//g')""" % (artifact)

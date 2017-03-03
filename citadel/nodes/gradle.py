@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import logging
-
 import citadel.nodes.node
 import citadel.tools
 
@@ -48,7 +46,8 @@ class Gradle(citadel.nodes.node.Base):
             self.add_error('Parsing error, probably malformed yaml.')
             return
 
-        gradle_exec = self.get_gradle()
+        self.output.append(self.get_gradle())
+        gradle_exec = '"$GRADLE_EXEC"'
 
         if 'build' in path:
 
@@ -59,16 +58,20 @@ class Gradle(citadel.nodes.node.Base):
             cmd = ['%s' % (gradle_exec)]
             cmd.append(parsed['lifecycle'])
 
-            for k, v in ignored.items():
-                cmd.append('-D%s="%s"' % (k, v))
+            for key, value in ignored.items():
+                cmd.append('-D%s="%s"' % (key, value))
             self.output.append(citadel.tools.format_cmd(cmd))
 
     def get_gradle(self):
-        self.output.append("""GRADLE="$(which gradle)"
-if [ -z "${GRADLE}" ] ; then
-    echo "Unable to find gradle in $PATH, using default wrapper."
-    GRADLE="./gradlew"
+        """Find gradle's wrapper or try the system's instead."""
+        return """
+GRADLE_EXEC="./gradlew"
+if [ ! -f "$GRADLE_EXEC" ] ; then
+    if ! which gradle > /dev/null ; then
+        echo "Unable to find any gradle executable. Aborting..."
+        exit 1
+    fi
+    echo "Unable to find gradle wrapper, using the one from PATH."
+    GRADLE_EXEC="gradle"
 fi
-$GRADLE --version
-""")
-        return "$GRADLE"
+$GRADLE_EXEC --version"""

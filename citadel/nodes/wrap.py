@@ -26,7 +26,7 @@ class Wrap(citadel.nodes.node.Base):
     able to properly detect and handle duplicate keys (and it shouldn't since
     it would otherwise break the specification and confuse users). This is
     often the situation when using the ``branch`` module.
-    
+
     To work around that syntatic quirk, the ``wrap`` module should be used
     to allow multiple invokations of the same module within.
 
