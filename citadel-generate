@@ -32,7 +32,7 @@ def main():
     args = parser.parse_args()
 
     logging.basicConfig(format='%(asctime)s::%(levelname)s::%(message)s')
-    logging.getLogger().setLevel(getattr(logging, 'DEBUG'))
+    logging.getLogger().setLevel(getattr(logging, 'INFO'))
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -59,7 +59,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
