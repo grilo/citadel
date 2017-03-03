@@ -39,7 +39,6 @@ class Webhook(citadel.nodes.node.Base):
     def __init__(self, yml, path):
         super(Webhook, self).__init__(yml, path)
 
-        curl_exec = citadel.tools.get_executable('curl')
         self.output.append(citadel.tools.find_downloader())
         for url in yml:
             self.output.append('$DOWNLOADER ' + url)
