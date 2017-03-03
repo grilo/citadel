@@ -72,9 +72,7 @@ class Ansible(citadel.nodes.node.Base):
 
         cmd = ['%s -v -i %s %s' % (ansible_exec, parsed['inventory'], parsed['playbook'])]
 
-        for k, v in ignored.items():
-            if k == 'inventory' or k == 'playbook':
-                continue
-            cmd.append('-e %s=%s' % (k, v))
+        for key, value in ignored.items():
+            cmd.append('-e %s=%s' % (key, value))
         self.output.append('echo "Deploying with ansible: %s"' % (parsed['playbook']))
         self.output.append(citadel.tools.format_cmd(cmd))
