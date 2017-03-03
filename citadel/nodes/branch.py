@@ -5,6 +5,7 @@ import re
 
 import citadel.nodes.node
 import citadel.tools
+import citadel.scm
 
 
 class Branch(citadel.nodes.node.Base):
@@ -138,7 +139,7 @@ class Branch(citadel.nodes.node.Base):
 
 
     def __init__(self, yml, path):
-        branch_name = self.get_branch_name()
+        branch_name = citadel.scm.get_client().get_active_branch()
         if re.search(yml, branch_name):
             logging.debug('Matched branch name for %s: %s', '/'.join(path), branch_name)
             super(Branch, self).__init__(yml, path)
@@ -146,28 +147,3 @@ class Branch(citadel.nodes.node.Base):
             logging.debug('Branch name mismatch for %s. Expected [%s] instead got [%s])',
                           '/'.join(path), yml, branch_name)
             self.skip = True
-
-    def get_branch_name(self):
-        """Attempts to retrieve branch name using multiple clients."""
-        branch_name = None
-
-        # Git
-        returncode, out = citadel.tools.run_cmd('git rev-parse --abbrev-ref HEAD')
-        if returncode == 0:
-            logging.debug('Git repo detected.')
-            branch_name = out.strip()
-
-        # AccuRev
-        returncode, out = citadel.tools.run_cmd('accurev info')
-        if returncode == 0:
-            logging.debug('AccuRev repo detected.')
-            for line in out.splitlines():
-                if line.strip().startswith('Basis'):
-                    branch_name = line.split(":")[-1].strip()
-                    break
-
-        if not branch_name:
-            logging.warning('Unable to detect any branch name in the current directory.')
-            return ''
-        logging.info('Current branch: %s', branch_name)
-        return branch_name
