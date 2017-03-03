@@ -73,19 +73,12 @@ class Language(citadel.nodes.node.Base):
                 version = '.'.join(version.split('.', 1)[1:])
             self.output.append(self.get_alternatives('javac', 'java-' + version))
             self.output.append('export JAVA_HOME="$(echo $BINARY | sed "s/\/bin\/javac.*//g")"')
-        elif 'npm' in yml:
-            wanted_version = re.match(r'npm([0-9\.]+)', yml).group(1)
-            npm = citadel.tools.find_executable('npm')
-            rc, out = citadel.tools.run_cmd(npm + ' --version')
-            existing_version = out.strip()
-            if not re.match(wanted_version, existing_version):
-                self.add_error('Couldn\'t find the required npm version (%s).' % (wanted_version))
         elif 'xcode' in yml:
             wanted_version = re.match(r'xcode([A-Za-z0-9\.\-]+)', yml).group(1)
             self.output.append('sudo xcode-select -s /Applications/Xcode%s.app' % (wanted_version))
 
     def get_alternatives(self, binary, wildcard):
-		return """
+        return """
 BINARY="%s"
 BINLOCATOR="update-alternatives"
 
