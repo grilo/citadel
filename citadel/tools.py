@@ -73,16 +73,16 @@ else
     echo "Unable to find any downloader software. Aborting..." && exit 1
 fi"""
 
-def find_file(wildcard):
+def find_file(wildcard, variable='FILE'):
     """Look for an arbitraty file."""
     dirname = os.path.dirname(wildcard)
     if not dirname:
         dirname = '.'
     filename = os.path.basename(wildcard)
-    return """FILE=$(find %s -type f -name "%s")
-if [ $(echo "$FILE"  | wc -l) -gt 1 ] ; then
+    return """%s=$(find %s -type f -name "%s")
+if [ $(echo "$%s"  | wc -l) -gt 1 ] ; then
     echo "Too many results found while looking for %s. Aborting..." && exit 1
-fi""" % (dirname, filename, wildcard)
+fi""" % (variable, dirname, filename, variable, wildcard)
 
 def bash_syntax(string):
     """Validate string's compliance with bash syntax."""

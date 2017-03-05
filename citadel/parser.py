@@ -117,5 +117,6 @@ class Options(object):
         for key, value in self.yml.items():
             if not key in self.accounted:
                 ignored[key] = value
+                del self.yml[key]
 
         return errors, self.yml, ignored
