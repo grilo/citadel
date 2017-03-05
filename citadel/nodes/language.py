@@ -70,7 +70,7 @@ class Language(citadel.nodes.node.Base):
             version = re.search(r'[0-9\.]+', yml).group(0)
             if '.' in version:
                 version = '.'.join(version.split('.', 1)[1:])
-            self.output.append(self.get_alternatives('javac', 'java-' + version))
+            self.output.append(self.get_alternatives('javac', 'java-.*[.-]' + version + '[.-]'))
             self.output.append(r'export JAVA_HOME="$(echo $BINARY | sed "s/\/bin\/javac.*//g")"')
         elif 'xcode' in yml:
             wanted_version = re.match(r'xcode([A-Za-z0-9\.\-]+)', yml).group(1)
