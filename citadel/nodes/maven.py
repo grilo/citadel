@@ -165,7 +165,7 @@ class Maven(citadel.nodes.node.Base):
 
         publish:
           maven:
-            file: target/artifact*.jar
+            file: target/artifact.*.jar
             artifactId: myArtifact
             groupId: com.company.project
             snapshot: True
@@ -176,7 +176,7 @@ class Maven(citadel.nodes.node.Base):
     .. code-block:: bash
         :linenos:
 
-        FILE=$(find target -type f -name "artifact*.jar")
+        FILE=$(find target -type f -print | grep -E "target/artifact.*.jar")
         VERSION=$(unzip -p '$FILE' \
             '*com.company.project*/*myArtifact*/pom.properties' \
             | grep version \
