@@ -78,11 +78,10 @@ def find_file(wildcard, variable='FILE'):
     dirname = os.path.dirname(wildcard)
     if not dirname:
         dirname = '.'
-    filename = os.path.basename(wildcard)
-    return """%s=$(find %s -type f -name "%s")
+    return """%s=$(find %s -type f -print | grep -E "%s")
 if [ $(echo "$%s"  | wc -l) -gt 1 ] ; then
     echo "Too many results found while looking for %s. Aborting..." && exit 1
-fi""" % (variable, dirname, filename, variable, wildcard)
+fi""" % (variable, dirname, wildcard, variable, wildcard)
 
 def bash_syntax(string):
     """Validate string's compliance with bash syntax."""
