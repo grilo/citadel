@@ -190,25 +190,33 @@ class Maven(citadel.nodes.node.Base):
 
     """
 
+
     def __init__(self, yml, path):
         super(Maven, self).__init__(yml, path)
+
         # Always display maven's version
         mvn_exec = citadel.tools.find_executable('mvn') + ' -V -B'
+
         if 'build' in path:
+
             self.parser.add_default('pom', 'pom.xml')
             self.parser.add_default('lifecycle', 'clean install')
             self.parser.add_default('opts', '')
             errors, parsed, ignored = self.parser.validate()
+
             cmd = ['%s -f "%s" %s %s' %
                    (mvn_exec, parsed['pom'], parsed['lifecycle'], parsed['opts'])]
             for key, value in ignored.items():
                 cmd.append('-D%s=%s' % (key, value))
             self.output.append(citadel.tools.format_cmd(cmd))
+
         elif 'publish' in path:
+
             self.parser.add_default('opts', '')
             self.parser.is_required('file')
             self.parser.is_required('url')
             self.parser.is_required('repositoryId')
+
             if 'pomFile' in yml.keys():
                 self.parser.is_required('pomFile')
                 errors, parsed, ignored = self.parser.validate()
@@ -220,11 +228,15 @@ class Maven(citadel.nodes.node.Base):
                 self.parser.add_default('snapshot', False)
                 self.parser.is_required('artifactId')
                 self.parser.is_required('groupId')
+
                 errors, parsed, ignored = self.parser.validate()
                 self.errors.extend(errors)
+
                 if parsed['file'] and parsed['version'] == '${VERSION}':
+
                     artifact = parsed['file']
                     version = ''
+
                     if artifact.endswith('.apk'):
                         version = self.read_apk_version(artifact)
                     elif artifact.endswith('.jar') or \
@@ -242,17 +254,24 @@ class Maven(citadel.nodes.node.Base):
                     else:
                         self.add_error('Unable to automatically induce version for: %s' %
                                        (parsed['file']))
+
                     self.output.append(version)
+
                 if parsed['snapshot'] and not '-SNAPSHOT' in parsed['version']:
                     parsed['version'] += '-SNAPSHOT'
+
+
             self.output.append(citadel.tools.find_file(parsed['file']))
             parsed['file'] = "$FILE"
+
             cmd = ['%s deploy:deploy-file %s' % (mvn_exec, parsed['opts'])]
+
             del parsed['opts']
             for key, value in parsed.items():
                 cmd.append('-D%s="%s"' % (key, value))
             for key, value in ignored.items():
                 cmd.append('-D%s="%s"' % (key, value))
+
             self.output.append(citadel.tools.format_cmd(cmd))
 
     def read_apk_version(self, artifact):
