@@ -16,9 +16,6 @@ class Npmrc(citadel.nodes.node.Base):
     :param strict_ssl: Whether strict-ssl should be on/off.
     :type strict_ssl: optional
 
-    :param token: The authentication token (often used when publishing).
-    :type token: optional
-
     **Usage**
 
     .. code-block:: yaml
@@ -30,7 +27,7 @@ class Npmrc(citadel.nodes.node.Base):
             email: owner@company.com
             always_auth: false
             strict_ssl: false
-            token: d12a243482adasjnad
+            _auth: d12a243482adasjnad
 
     .. warning::
 
@@ -62,7 +59,7 @@ class Npmrc(citadel.nodes.node.Base):
             email: owner@company.com
             always_auth: false
             strict_ssl: false
-            token: d12a243482adasjnad
+            _auth: d12a243482adasjnad
           npm: start run
     """
 
@@ -70,25 +67,22 @@ class Npmrc(citadel.nodes.node.Base):
         super(Npmrc, self).__init__(yml, path)
         self.parser.add_default('always-auth', 'false')
         self.parser.add_default('strict-ssl', 'false')
-        self.parser.add_default('token', 'undefined')
         errors, parsed, ignored = self.parser.validate()
         self.errors.extend(errors)
         self.output.append(
             self.generate_npmrc(
                 parsed['always-auth'],
                 parsed['strict-ssl'],
-                parsed['token'],
             )
         )
         for key, value in ignored.items():
             self.output.append('echo "%s: %s" >> .npmrc' % (key, value))
 
-    def generate_npmrc(self, always_auth, strict_ssl, token):
+    def generate_npmrc(self, always_auth, strict_ssl):
         """Generate an .npmrc file."""
         return r"""
 echo "Generating .npmrc file. If we're having authentication problems, ensure
 the variable \$NPMAUTH is being passed through citadel."
 echo "always-auth: %s" >> .npmrc
 echo "strict-ssl: %s" >> .npmrc
-echo "_token: %s" >> .npmrc
-""" % (always_auth, strict_ssl, token)
+""" % (always_auth, strict_ssl)
