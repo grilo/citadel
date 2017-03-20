@@ -79,8 +79,8 @@ def find_file(wildcard, variable='FILE'):
     if not dirname:
         dirname = '.'
     return """%s=$(find %s -type f -print | grep -E "%s")
-if [ $(echo "$%s"  | wc -l) -gt 1 ] ; then
-    echo "Too many results found while looking for %s. Aborting..." && exit 1
+if [ $(echo "$%s"  | wc -l) -ne 1 ] ; then
+    echo "Too many (>1) or too few (0) results found while looking for %s. Aborting..." && exit 1
 fi""" % (variable, dirname, wildcard, variable, wildcard)
 
 def bash_syntax(string):

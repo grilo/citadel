@@ -87,7 +87,14 @@ class Git(SCMClient):
     def get_active_issues(self):
         return ''
 
-def get_client():
+class NoScm:
+    def __getattr__(self, name):
+        logging.debug("class NoScm called with method %s" % name)
+        def notImplemented(*args, **kwargs):
+            return ""
+        return notImplemented
+
+def get_client(raiseOnError=True):
     # Git
     rc, out = citadel.tools.run_cmd('git status')
     if rc == 0:
@@ -95,7 +102,11 @@ def get_client():
         return Git()
     # AccuRev
     rc, out = citadel.tools.run_cmd('accurev info')
-    if rc == 0:
+    if 'Workspace/ref:' in out:
         logging.debug('AccuRev repo detected.')
         return AccuRev()
-    raise NotImplementedError('Unknown SCM client: %s', os.getcwd())
+    logging.warning("Cannot find type of SCM client in repo/dir: '%s'" % os.getcwd()) 
+    if raiseOnError:
+        raise NotImplementedError('Unknown SCM client: %s', os.getcwd())
+    print NoScm()
+    return NoScm()
