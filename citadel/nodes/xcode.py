@@ -227,6 +227,9 @@ class Xcode(citadel.nodes.node.Base):
         if app_id:
             cmd += ' -a %s' % (app_id)
         return """
+if [ -d ppbuddy ] ; then
+    rm -fr ppbuddy
+fi
 git clone https://github.com/grilo/ppbuddy.git
 cmd="%s"
 if [[ $ENVIRONMENT =~  PRO ]] ; then
