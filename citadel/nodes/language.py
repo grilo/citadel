@@ -78,18 +78,7 @@ class Language(citadel.nodes.node.Base):
 
     def get_alternatives(self, binary, wildcard):
         """Best effort at finding installed software without doing a 'find /'."""
-        return """
-BINARY="%s"
-BINLOCATOR="update-alternatives"
-
-if ! which update-alternatives > /dev/null ; then
-    BINLOCATOR="/usr/sbin/update-alternatives"
-fi
-
-if ! $($BINLOCATOR --list $BINARY > /dev/null 2>&1) ; then
-    BINLOCATOR="$BINLOCATOR --display"
-else
-    BINLOCATOR="$BINLOCATOR --list"
-fi
-
-BINARY=$($BINLOCATOR $BINARY | sed 's/ - .*//g' | grep "^/.*%s")""" % (binary, wildcard)
+        return citadel.tools.template('language_getalernatives', {
+            'binary': binary,
+            'wildcard': wildcard,
+        })

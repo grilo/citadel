@@ -1,0 +1,6 @@
+echo "Unlocking keychain for code signing."
+keychain="{keychain}"
+/usr/bin/security list-keychains -s "$keychain"
+/usr/bin/security default-keychain -d user -s "$keychain"
+/usr/bin/security unlock-keychain -p "{password}" "$keychain"
+/usr/bin/security set-keychain-settings -t 7200 "$keychain"

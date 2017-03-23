@@ -276,38 +276,24 @@ class Maven(citadel.nodes.node.Base):
 
     def read_apk_version(self, artifact):
         """Read version from an APK file."""
-        return """
-#AAPT_TOOL="$ANDROID_HOME/build-tools/$(ls -rt $ANDROID_HOME/build-tools | tail -1)/aapt"
-AAPT_TOOL="$ANDROID_HOME/build-tools/23.0.3/aapt"
-VERSION=$($AAPT_TOOL d badging "%s" | grep versionName | awk -F\\\' \'{print $4"-"$6}\')
-""" % (artifact)
+        return citadel.tools.template('maven_readpk', { 'artifact': artifact })
 
     def read_jar_version(self, artifact, group_id, artifact_id):
         """Read version from a JAR file."""
-        return """
-VERSION=$(unzip -p '%s' '*%s*/*%s*/pom.properties' \
-    | grep version \
-    | awk -F= '{print $2}')
-""" % (artifact, group_id, artifact_id)
+        return citadel.tools.template('maven_readjar', {
+            'file': artifact,
+            'group_id': group_id,
+            'artifact_id': artifact_id,
+        })
 
     def read_car_version(self, artifact):
         """Read version from a CAR file."""
-        return """
-VERSION=$(unzip -p '%s' 'artifacts.xml' \
-    | grep 'artifact name' \
-    | awk -F\\\" '{print $4}')""" % (artifact)
+        return citadel.tools.template('maven_readcar', {'file': artifact})
 
     def read_ipa_version(self):
         """Thanks Steve."""
-        return """
-VERSION=$(/usr/libexec/PlistBuddy \
-    -c "Print ApplicationProperties::CFBundleVersion" \
-    "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")
-VERSION=$VERSION-$(/usr/libexec/PlistBuddy -c \
-    "Print ApplicationProperties:CFBundleShortVersionString" \
-    "$(find ./* -type f -name Info.plist | grep "xcarchive/Info.plist")")"""
+        return citadel.tools.template('maven_readipa')
 
     def read_rpm_version(self, artifact):
         """Read version from an RPM file."""
-        return r"""RPMFILE=$(find . -type f -name "%s" -exec ls -rt {} \; | tail -1)
-VERSION=$(rpm -qp --queryformat '%%{VERSION}' "$RPMFILE" | sed 's/[-_]SNAPSHOT//g')""" % (artifact)
+        return citadel.tools.template('read_rpm', {'file': artifact})

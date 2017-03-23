@@ -46,7 +46,7 @@ class Gradle(citadel.nodes.node.Base):
             self.add_error('Parsing error, probably malformed yaml.')
             return
 
-        self.output.append(self.get_gradle())
+        self.output.append(citadel.tools.template('gradle_getgradle'))
         gradle_exec = '"$GRADLE_EXEC"'
 
         if 'build' in path:
@@ -61,17 +61,3 @@ class Gradle(citadel.nodes.node.Base):
             for key, value in ignored.items():
                 cmd.append('-D%s="%s"' % (key, value))
             self.output.append(citadel.tools.format_cmd(cmd))
-
-    def get_gradle(self):
-        """Find gradle's wrapper or try the system's instead."""
-        return """
-GRADLE_EXEC="./gradlew"
-if [ ! -f "$GRADLE_EXEC" ] ; then
-    if ! which gradle > /dev/null ; then
-        echo "Unable to find any gradle executable. Aborting..."
-        exit 1
-    fi
-    echo "Unable to find gradle wrapper, using the one from PATH."
-    GRADLE_EXEC="gradle"
-fi
-$GRADLE_EXEC --version"""

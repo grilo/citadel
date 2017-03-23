@@ -114,3 +114,24 @@ def load_module(filename, path, classname=None):
 def format_cmd(command_list):
     """Returns a nicely indented bash command."""
     return ' \\\n  '.join(command_list)
+
+def template(name, vars):
+    if not name.endswith('.tpl.sh'):
+        name += '.tpl.sh'
+    fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates', name)
+    with open(fullpath, 'r') as tpl:
+        tpl_string = tpl.read()
+        try:
+            if isinstance(vars, dict):
+                return tpl_string.format(**vars)
+            elif isinstance(vars, list):
+                return tpl_string.format(*vars)
+            elif isinstance(vars, str):
+                return tpl_string.format(vars)
+            else:
+                raise NotImplementedError('Unknown object type, excepted dict, list or str.')
+        except KeyError as e:
+            logging.critical('Error when parsing template: %s', name)
+            logging.critical('At least one variable was missing: %s', e.message)
+            logging.critical('Instead got: %s', vars)
+            raise KeyError(e.message)

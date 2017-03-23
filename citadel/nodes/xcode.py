@@ -132,6 +132,7 @@ class Xcode(citadel.nodes.node.Base):
         xcode_exec = citadel.tools.find_executable('xcodebuild')
 
         if not 'build' in path:
+            logging.critical('Xcode can only run during the "build" stage.')
             return
 
         self.parser.add_default('app_id', None)
@@ -160,14 +161,7 @@ class Xcode(citadel.nodes.node.Base):
                                                 parsed['scheme'] + '.ipa')
             logging.debug('Setting exportPath to: %s', parsed['exportPath'])
 
-        self.output.append('echo "Xcodebuild version: $(xcodebuild -version)"')
-        self.output.append('echo "Bundle version: $(/usr/bin/agvtool mvers -terse1)"')
-
-        # ibtoold may timeout if CoreSimulator has weird stuff
-        self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/CoreSimulator"/*')
-        # Builds fail very often due to incorrect caching policies from Xcode
-        # (stored in DerivedData)
-        self.output.append('rm -fr "/Users/$(whoami)/Library/Developer/Xcode/DerivedData"/*')
+        self.output.append(citadel.tools.template('xcode_header'))
 
         cmd = ['%s' % (xcode_exec)]
 
@@ -226,41 +220,18 @@ class Xcode(citadel.nodes.node.Base):
         cmd = 'python ppbuddy/ppbuddy.py -k %s' % (keychain)
         if app_id:
             cmd += ' -a %s' % (app_id)
-        return """
-if [ -d ppbuddy ] ; then
-    rm -fr ppbuddy
-fi
-git clone https://github.com/grilo/ppbuddy.git
-cmd="%s"
-if [[ $ENVIRONMENT =~  PRO ]] ; then
-    cmd="$cmd --production"
-fi
-output=$($cmd)
-UUID=$(echo "$output" | head -1 | awk -F@ '{print $1}')
-PP_NAME=$(echo "$output" | head -1 | awk -F@ '{print $2}')
-CODE_SIGN_IDENTITY=$(echo "$output" | head -1 | awk -F@ '{print $3}')
-TEAM_ID=$(echo "$output" | head -1 | awk -F@ '{print $4}')""" % (cmd)
+        return citadel.tools.template('xcode_provisioningprofile', {
+            'command': cmd
+        })
 
     def unlock_keychain(self, keychain, password):
-        """Unlockes the keychain, required to digitally sign apps."""
-        return """echo "Unlocking keychain for code signing."
-keychain="%s"
-/usr/bin/security list-keychains -s "$keychain"
-/usr/bin/security default-keychain -d user -s "$keychain"
-/usr/bin/security unlock-keychain -p "%s" "$keychain"
-/usr/bin/security set-keychain-settings -t 7200 "$keychain" """ % (keychain, password)
+        """Unlocks the keychain, required to digitally sign apps."""
+        return citadel.tools.template('xcode_unlockkeychain', {
+            'keychain': keychain, 'password': password
+        })
 
     def codesign_verify(self, ipafile):
         """Ensure the code signing was done properly."""
-        return """unzip -oq -d "verifycodesign" "%s"
-unpacked_app="$(ls verifycodesign/Payload/)"
-cd verifycodesign/Payload
-if ! codesign --verify --verbose=4 "$unpacked_app" --no-strict ; then
-    codesign -d -r -vvvvv "$unpacked_app"
-    echo "The application is not signed correctly."
-    echo "This may mean out of date certificate chains, probably hidden."
-    rm -fr "verifycodesign"
-    exit 1
-fi
-cd -
-rm -fr "verifycodesign" """ % (ipafile)
+        return citadel.tools.template('xcode_codesignverify', {
+            'ipafile': ipafile
+        })

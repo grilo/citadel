@@ -104,18 +104,9 @@ class Npm(citadel.nodes.node.Base):
             registry = "--registry " + registry
         else:
             registry = ''
-        return """
-filelist=$(find %s -maxdepth 1 -name "%s" | sort | grep -v "^%s$")
-npmregistry="%s"
-if [ $(echo "${filelist}" | wc -l) -eq 0 ] ; then
-    echo "Unable to find any packages to publish!"
-else
-    cmd="npm $npmregistry"
-    scope="%s"
-    if [ ! -z "$scope" ] ; then
-        cmd="$cmd --scope $scope"
-    fi
-    for pkg in $filelist ; do
-        $cmd publish $pkg
-    done
-fi""" % (directory, wildcard, directory, registry, scope)
+        return citadel.tools.template('npm_publishpkg', {
+            'directory': directory,
+            'wildcard': wildcard,
+            'registry': registry,
+            'scope': scope,
+        })

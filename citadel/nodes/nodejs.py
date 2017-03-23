@@ -55,27 +55,15 @@ class Nodejs(citadel.nodes.node.Base):
 
     def install_node(self, version):
         """Installs nodejs from its primary location."""
-        return """%s
-NODE_VERSION="%s"
-[ ! -f "node-${NODE_VERSION}-linux-x64.tar.gz" ] || rm -f node-${NODE_VERSION}-linux-x64.tar.gz
-${DOWNLOADER} https://nodejs.org/download/release/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz
-[ ! -d "node-${NODE_VERSION}-linux-x64.tar.gz" ] || rm -fr node-${NODE_VERSION}-linux-x64.tar.gz
-tar -xzf node-${NODE_VERSION}-linux-x64.tar.gz
-rm -f node-${NODE_VERSION}-linux-x64.tar.gz
-export PATH="node-${NODE_VERSION}-linux-x64/bin:$PATH"
-echo "Node version: $(node --version)"
-""" % (citadel.tools.find_downloader(), version)
+        return citadel.tools.template('nodejs_installnode', {
+            'downloader': citadel.tools.find_downloader(),
+            'node_version': version,
+        })
 
     def install_npm(self, version):
         """Install npm, requires an already existing NPM version.
 
         If node is also requested, it usually brings its own NPM as well."""
-        return """
-NPM_VERSION="%s"
-if ! which npm > /dev/null ; then
-    echo "At least one npm version must be installed to boostrap any further npm installations."
-    exit 1
-fi
-npm install npm@$NPM_VERSION
-export PATH="node_modules/.bin:$PATH"
-echo "NPM version: $(npm --version)" """ % (version)
+        return citadel.tools.template('nodejs_installnpm', {
+            'npm_version': version
+        })
