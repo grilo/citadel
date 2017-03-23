@@ -115,7 +115,7 @@ def format_cmd(command_list):
     """Returns a nicely indented bash command."""
     return ' \\\n  '.join(command_list)
 
-def template(name, vars):
+def template(name, vars={}):
     if not name.endswith('.tpl.sh'):
         name += '.tpl.sh'
     fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates', name)
