@@ -78,7 +78,7 @@ class Language(citadel.nodes.node.Base):
 
     def get_alternatives(self, binary, wildcard):
         """Best effort at finding installed software without doing a 'find /'."""
-        return citadel.tools.template('language_getalernatives', {
+        return citadel.tools.template('language_getalternatives', {
             'binary': binary,
             'wildcard': wildcard,
         })

@@ -276,7 +276,7 @@ class Maven(citadel.nodes.node.Base):
 
     def read_apk_version(self, artifact):
         """Read version from an APK file."""
-        return citadel.tools.template('maven_readpk', { 'artifact': artifact })
+        return citadel.tools.template('maven_readapk', { 'artifact': artifact })
 
     def read_jar_version(self, artifact, group_id, artifact_id):
         """Read version from a JAR file."""

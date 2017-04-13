@@ -76,6 +76,11 @@ class Npm(citadel.nodes.node.Base):
     def __init__(self, yml, path):
         super(Npm, self).__init__(yml, path)
         npm_exec = citadel.tools.find_executable('npm')
+
+
+        if 'nodejs' in path:
+            return
+
         self.output.append('%s --version' % (npm_exec))
         if 'build' in path:
             self.output.append(npm_exec + ' ' + str(yml))

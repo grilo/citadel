@@ -1,6 +1,6 @@
 filelist=$(find {directory} -maxdepth 1 -name "{wildcard}" | sort | grep -v "^{directory}$")
 npmregistry="{registry}"
-if [ $(echo "${filelist}" | wc -l) -eq 0 ] ; then
+if [ $(echo "$filelist" | wc -l) -eq 0 ] ; then
     echo "Unable to find any packages to publish!"
 else
     cmd="npm $npmregistry"

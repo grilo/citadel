@@ -79,6 +79,8 @@ class Npmrc(citadel.nodes.node.Base):
             )
         )
         for key, value in ignored.items():
+            if isinstance(value, bool):
+                value = str(bool).lower() # npmrc doesn't understand True nor False
             self.output.append('echo "%s = %s" >> .npmrc' % (key, value))
 
     def generate_npmrc(self, always_auth, strict_ssl):
@@ -88,4 +90,4 @@ echo "Generating .npmrc file. If we're having authentication problems, ensure
 the variable \$NPMAUTH is being passed through citadel."
 echo "always-auth = %s" > .npmrc
 echo "strict-ssl = %s" >> .npmrc
-""" % (always_auth, strict_ssl)
+""" % (str(always_auth).lower(), str(strict_ssl).lower())
