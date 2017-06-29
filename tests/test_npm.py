@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import unittest
-import subprocess
 
 import citadel.nodes.npm
 
