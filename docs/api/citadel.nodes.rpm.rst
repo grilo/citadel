@@ -1,6 +1,6 @@
-citadel\.nodes\.npm module
+citadel\.nodes\.rpm module
 ==========================
 
-.. automodule:: citadel.nodes.npm
+.. automodule:: citadel.nodes.rpm
     :members:
     :no-undoc-members:

@@ -1,5 +1,6 @@
-citadel.nodes.branch module
-===========================
+citadel\.nodes\.branch module
+=============================
 
 .. automodule:: citadel.nodes.branch
     :members:
+    :no-undoc-members:

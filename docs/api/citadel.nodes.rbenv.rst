@@ -1,5 +1,6 @@
-citadel.nodes.rbenv module
-==========================
+citadel\.nodes\.rbenv module
+============================
 
 .. automodule:: citadel.nodes.rbenv
     :members:
+    :no-undoc-members:

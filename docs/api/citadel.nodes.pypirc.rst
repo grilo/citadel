@@ -1,6 +1,6 @@
-citadel\.nodes\.script module
+citadel\.nodes\.pypirc module
 =============================
 
-.. automodule:: citadel.nodes.script
+.. automodule:: citadel.nodes.pypirc
     :members:
     :no-undoc-members:
