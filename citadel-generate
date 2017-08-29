@@ -30,6 +30,8 @@ def main():
         help="Passes all existing variable environments to citadel.")
     parser.add_argument("-i", "--ignore", \
         help="Prevent/ignore the specified keys from loading.")
+    parser.add_argument("-o", "--output-format", default='shell', \
+        help="Specify the output format for the script (supported: shell, jenkins)")
 
     args = parser.parse_args()
 
@@ -57,7 +59,7 @@ def main():
     if args.all_environment:
         args.environment += " " + " ".join(["%s=%s" % (k, v) for k, v in os.environ.items()])
 
-    output = citadel.load(args.file, args.environment, args.ignore)
+    output = citadel.load(args.file, args.environment, args.ignore, args.output_format)
     if not output:
         raise SystemExit('Errors were found while processing: %s' % (args.file))
     print output

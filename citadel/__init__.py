@@ -11,7 +11,7 @@ import citadel.tools
 import citadel.tree
 
 
-def load(yml_file, environment, ignore):
+def load(yml_file, environment, ignore, output_format='shell'):
     """Load the YML file."""
 
 
@@ -35,8 +35,16 @@ def load(yml_file, environment, ignore):
             os.chdir(old_cwd)
             return False
 
-        output = tree_walker.get_output(root_node)
+        if output_format == 'shell':
+            output = tree_walker.get_output_shell(root_node)
+        elif output_format == 'jenkins':
+            output = tree_walker.get_output_jenkins(root_node, \
+                                os.path.dirname(os.path.abspath(yml_file)))
+        else:
+            logging.critical("Unknown output format: %s", output_format)
+            return
+
         logging.debug('Generated script:\n%s', '\n'.join(citadel.tools.filter_secrets(output)))
 
         os.chdir(old_cwd)
-        return '\n'.join(output)
+        return output

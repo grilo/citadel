@@ -104,9 +104,23 @@ class Walker(object):
             errors.extend(node.errors)
         return errors
 
-    def get_output(self, root_node):
+    def get_output_shell(self, root_node):
         """Collect the generated output."""
         output = root_node.output
         for node in self.walk(root_node):
             output.extend(node.output)
+        return '\n'.join(output)
+
+    def get_output_jenkins(self, root_node, directory):
+        """Collect the generated output."""
+        output = ""
+        output += "{ ->\n\tnode {\n"
+        output += "\t\tdir('%s') {\n" % (directory)
+        output += "\t\t\tstage 'Prepare'\n"
+        output += "\t\t\tsh ''' %s '''\n" % ('\n'.join(root_node.output))
+        for node in self.walk(root_node):
+            #output += "\t\t\tstage '%s'\n" % (node.__class__.__name__)
+            output += "\t\t\tstage '%s'\n" % ('/'.join(node.path))
+            output += "\t\t\t\tsh '''\n\t\t\t\t %s \n'''\n" % ('\n\t\t\t\t\t'.join(node.output).strip().replace("'", "\\'"))
+        output += "\t\t}\n\t}\n}\n"
         return output
