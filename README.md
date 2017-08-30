@@ -33,7 +33,7 @@ conditional execution:
 ./citadel-generate -i deploy,test
 ```
 
-## Jenkinsfile
+### Jenkinsfile
 
 CITADel now supports "Pipeline script" jobs in jenkins. This change is purely cosmetic, but greatly enhaces visual feedback.
 
