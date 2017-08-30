@@ -32,3 +32,21 @@ conditional execution:
 # Do NOT generate the shell for deploy and test stages
 ./citadel-generate -i deploy,test
 ```
+
+## Jenkinsfile
+
+CITADel now supports "Pipeline script" jobs in jenkins. This change is purely cosmetic, but greatly enhaces visual feedback.
+
+To enable this:
+  1. Create a new job in jenkins of type "Pipeline".
+  2. Ensure that "Pipeline" is set to "Pipeline script".
+  3. Fill in the contents which the script below (example):
+``` groovy
+    node {
+        dir('/home/user/git/some_project') {
+            sh 'python citadel-generate -o jenkins > jenkinsfile'
+            load('jenkinsfile')
+        }
+    }() // Closure important!
+```
+You may want to fill in some stuff before/after (such as checking out from your SCM). The result should be similar to the example found [here](https://www.cloudbees.com/sites/default/files/blog/pipeline-vis.png). The actual name of the steps will be mapped directly to the contents of the citadel.yml file.
